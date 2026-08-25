@@ -1,7 +1,19 @@
 import { oc } from '@orpc/contract'
 import * as z from 'zod'
 import { errors } from './errors.js'
-import { budget, budgetPeriod, commandId, email, passwordSchema, publicUser } from './primitives.js'
+import {
+  budget,
+  budgetPeriod,
+  commandId,
+  credential,
+  email,
+  passwordSchema,
+  providerInfo,
+  providerSecret,
+  providerSlug,
+  publicUser,
+  verification,
+} from './primitives.js'
 
 export * from './primitives.js'
 export { errors } from './errors.js'
@@ -92,10 +104,73 @@ const budgets = {
     .output(z.object({ budget })),
 }
 
+/**
+ * The key vault.
+ *
+ * Note what is NOT here: any route that returns a secret. Not a reveal endpoint,
+ * not a masked one, not an export. A read path is exactly what an authorization
+ * bug turns into a mass leak, and an XSS in the front end would drain the vault
+ * through the user's own session. The screen gets four characters.
+ */
+const credentials = {
+  providers: oc
+    .route({ method: 'GET', path: '/providers' })
+    .errors({ NOT_AUTHENTICATED: errors.NOT_AUTHENTICATED })
+    .output(z.object({ providers: z.array(providerInfo) })),
+
+  list: oc
+    .route({ method: 'GET', path: '/credentials' })
+    .errors({ NOT_AUTHENTICATED: errors.NOT_AUTHENTICATED })
+    .output(z.object({ credentials: z.array(credential) })),
+
+  add: oc
+    .route({ method: 'POST', path: '/credentials' })
+    .errors({
+      NOT_AUTHENTICATED: errors.NOT_AUTHENTICATED,
+      UNKNOWN_PROVIDER: errors.UNKNOWN_PROVIDER,
+      PROVIDER_DISABLED: errors.PROVIDER_DISABLED,
+      CREDENTIAL_DUPLICATE: errors.CREDENTIAL_DUPLICATE,
+    })
+    .input(
+      z.object({
+        commandId,
+        provider: providerSlug,
+        secret: providerSecret,
+        label: z.string().max(80).optional(),
+      }),
+    )
+    // The verification travels WITH the credential, because "stored" and
+    // "works" are different facts and a screen that conflates them is lying on
+    // behalf of six providers that cannot be probed at all.
+    .output(z.object({ credential, verification })),
+
+  verify: oc
+    .route({ method: 'POST', path: '/credentials/{id}/verify' })
+    .errors({
+      NOT_AUTHENTICATED: errors.NOT_AUTHENTICATED,
+      CREDENTIAL_NOT_FOUND: errors.CREDENTIAL_NOT_FOUND,
+    })
+    .input(z.object({ id: z.uuid() }))
+    .output(z.object({ verification, credential: credential.nullable() })),
+
+  revoke: oc
+    .route({ method: 'DELETE', path: '/credentials/{id}' })
+    .errors({
+      NOT_AUTHENTICATED: errors.NOT_AUTHENTICATED,
+      CREDENTIAL_NOT_FOUND: errors.CREDENTIAL_NOT_FOUND,
+    })
+    .input(z.object({ commandId, id: z.uuid() }))
+    // Revoking here does NOT revoke the key at the provider. The screen says so:
+    // a leaked key is used directly against the provider's API, where any cap
+    // Prumo enforces is irrelevant.
+    .output(z.object({ revoked: z.literal(true), alsoRevokedAtProvider: z.literal(false) })),
+}
+
 export const contract = {
   health,
   auth,
   budget: budgets,
+  credential: credentials,
 }
 
 export type Contract = typeof contract

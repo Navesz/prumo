@@ -3,8 +3,15 @@ import { contract, type PublicUser } from '@prumo/contract'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import type { Auth } from '../app/auth.js'
 import type { Budgets } from '../app/budgets.js'
+import type { Credentials } from '../app/credentials.js'
 import { AppError } from '../app/errors.js'
-import type { BudgetRecord, UserRecord } from '../app/ports.js'
+import type {
+  BudgetRecord,
+  CredentialSummary,
+  ProviderInfo,
+  UserRecord,
+  VerifyOutcome,
+} from '../app/ports.js'
 import { assertNonNegative, formatNano, parseNano } from '../domain/money.js'
 import { latestMigrationName } from '../db/migrate.js'
 import { clearSessionCookie, readSessionToken, setSessionCookie } from './session-cookie.js'
@@ -14,6 +21,7 @@ export interface RouterContext {
   readonly reply: FastifyReply
   readonly auth: Auth
   readonly budgets: Budgets
+  readonly credentials: Credentials
   readonly role: 'api' | 'worker' | 'tudo'
   readonly secureCookies: boolean
   readonly checkDatabase: () => Promise<boolean>
@@ -166,10 +174,146 @@ const setCap = os.budget.setCap.use(authenticated).handler(async ({ input, conte
   return { budget: toPublicBudget(budget) }
 })
 
+// --- credentials ---------------------------------------------------------------
+
+function toPublicCredential(c: CredentialSummary) {
+  return {
+    id: c.id,
+    provider: c.provider,
+    kind: c.kind,
+    label: c.label,
+    lastFour: c.lastFour,
+    status: c.status,
+    verifiedAt: c.verifiedAt ? c.verifiedAt.toISOString() : null,
+    lastUsedAt: c.lastUsedAt ? c.lastUsedAt.toISOString() : null,
+    createdAt: c.createdAt.toISOString(),
+  }
+}
+
+function toPublicProvider(p: ProviderInfo) {
+  return {
+    slug: p.slug,
+    name: p.name,
+    active: p.active,
+    mode: p.mode,
+    costInResponse: p.costInResponse,
+    outputTtlSeconds: p.outputTtlSeconds,
+    docUrl: p.docUrl,
+    notice: p.notice,
+  }
+}
+
+function toPublicVerification(outcome: VerifyOutcome) {
+  return outcome.status === 'rate_limited' && outcome.retryAfterSeconds !== undefined
+    ? { status: outcome.status, retryAfterSeconds: outcome.retryAfterSeconds }
+    : { status: outcome.status }
+}
+
+const listProviders = os.credential.providers
+  .use(authenticated)
+  .handler(async ({ context, errors }) => {
+    if (!context.user) throw errors.NOT_AUTHENTICATED()
+    const providers = await context.credentials.listProviders(context.user)
+    return { providers: providers.map(toPublicProvider) }
+  })
+
+const listCredentials = os.credential.list
+  .use(authenticated)
+  .handler(async ({ context, errors }) => {
+    if (!context.user) throw errors.NOT_AUTHENTICATED()
+    const credentials = await context.credentials.list(context.user)
+    return { credentials: credentials.map(toPublicCredential) }
+  })
+
+const addCredential = os.credential.add
+  .use(authenticated)
+  .handler(async ({ input, context, errors }) => {
+    if (!context.user) throw errors.NOT_AUTHENTICATED()
+    const hints = clientHints(context)
+
+    try {
+      const result = await context.credentials.add(context.user, {
+        commandId: input.commandId,
+        provider: input.provider,
+        secret: input.secret,
+        label: input.label ?? null,
+        ipHash: hints.ipHash,
+      })
+
+      return {
+        credential: toPublicCredential(result.credential),
+        verification: toPublicVerification(result.verification),
+      }
+    } catch (error) {
+      // The secret is never in an AppError and never reaches a log line from
+      // here. Only the code travels.
+      if (error instanceof AppError) {
+        if (error.code === 'UNKNOWN_PROVIDER') {
+          throw errors.UNKNOWN_PROVIDER({ data: { provider: input.provider } })
+        }
+        if (error.code === 'PROVIDER_DISABLED') {
+          throw errors.PROVIDER_DISABLED({ data: { provider: input.provider } })
+        }
+        if (error.code === 'CREDENTIAL_DUPLICATE') {
+          throw errors.CREDENTIAL_DUPLICATE({ data: { provider: input.provider } })
+        }
+      }
+      throw error
+    }
+  })
+
+const verifyCredential = os.credential.verify
+  .use(authenticated)
+  .handler(async ({ input, context, errors }) => {
+    if (!context.user) throw errors.NOT_AUTHENTICATED()
+
+    try {
+      const outcome = await context.credentials.verify(context.user, input.id)
+      const all = await context.credentials.list(context.user)
+      const found = all.find((c) => c.id === input.id)
+
+      return {
+        verification: toPublicVerification(outcome),
+        credential: found ? toPublicCredential(found) : null,
+      }
+    } catch (error) {
+      if (error instanceof AppError && error.code === 'CREDENTIAL_NOT_FOUND') {
+        throw errors.CREDENTIAL_NOT_FOUND()
+      }
+      throw error
+    }
+  })
+
+const revokeCredential = os.credential.revoke
+  .use(authenticated)
+  .handler(async ({ input, context, errors }) => {
+    if (!context.user) throw errors.NOT_AUTHENTICATED()
+    const hints = clientHints(context)
+
+    try {
+      await context.credentials.revoke(context.user, input.id, hints.ipHash)
+      // Stated in the response shape, not only in the docs: this removed the key
+      // from Prumo and did nothing at the provider.
+      return { revoked: true as const, alsoRevokedAtProvider: false as const }
+    } catch (error) {
+      if (error instanceof AppError && error.code === 'CREDENTIAL_NOT_FOUND') {
+        throw errors.CREDENTIAL_NOT_FOUND()
+      }
+      throw error
+    }
+  })
+
 export const router = os.router({
   health: { live, ready },
   auth: { register, signIn, signOut, me },
   budget: { list: listBudgets, setCap },
+  credential: {
+    providers: listProviders,
+    list: listCredentials,
+    add: addCredential,
+    verify: verifyCredential,
+    revoke: revokeCredential,
+  },
 })
 
 export type Router = typeof router

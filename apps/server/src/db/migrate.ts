@@ -2,6 +2,7 @@ import { sql, type Kysely } from 'kysely'
 import { Migrator, type Migration, type MigrationProvider } from 'kysely/migration'
 import * as base from './migrations/20260824_0001_base.js'
 import * as appRole from './migrations/20260825_0002_app_role.js'
+import * as credentials from './migrations/20260825_0003_credentials.js'
 import type { Database } from './schema.js'
 
 /**
@@ -23,6 +24,7 @@ import type { Database } from './schema.js'
 const migrations: Record<string, Migration> = {
   '20260824_0001_base': base,
   '20260825_0002_app_role': appRole,
+  '20260825_0003_credentials': credentials,
 }
 
 class StaticMigrationProvider implements MigrationProvider {

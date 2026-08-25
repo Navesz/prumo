@@ -3,13 +3,17 @@ import type {
   BudgetRecord,
   BudgetsRepo,
   CommandsRepo,
+  CredentialsRepo,
+  CredentialSummary,
   NewUser,
+  ProviderInfo,
   Repos,
+  StoredCredential,
   SessionsRepo,
   UserRecord,
   UsersRepo,
 } from '../app/ports.js'
-import type { BudgetRow, Database, UserRow } from './schema.js'
+import type { BudgetRow, Database, ProviderCredentialRow, ProviderRow, UserRow } from './schema.js'
 
 /**
  * Repositories.
@@ -24,6 +28,7 @@ export function makeRepos(trx: Transaction<Database>): Repos {
     sessions: makeSessions(trx),
     budgets: makeBudgets(trx),
     commands: makeCommands(trx),
+    credentials: makeCredentials(trx),
   }
 }
 
@@ -237,6 +242,222 @@ function makeCommands(trx: Transaction<Database>): CommandsRepo {
           route: input.route,
           status: input.status,
           result: input.result as never,
+        })
+        .execute()
+    },
+  }
+}
+
+// --- M2: the provider catalogue and the key vault -------------------------------
+
+function toProvider(row: ProviderRow): ProviderInfo {
+  return {
+    slug: row.slug,
+    name: row.name,
+    active: row.active,
+    mode: row.mode,
+    costInResponse: row.cost_in_response,
+    outputTtlSeconds: row.output_ttl_seconds,
+    docUrl: row.doc_url,
+    notice: row.notice,
+  }
+}
+
+function toSummary(row: ProviderCredentialRow): CredentialSummary {
+  return {
+    id: row.id,
+    provider: row.provider,
+    kind: row.kind,
+    label: row.label,
+    lastFour: row.last_four,
+    status: row.status,
+    verifiedAt: row.verified_at,
+    lastUsedAt: row.last_used_at,
+    createdAt: row.created_at,
+  }
+}
+
+function toStored(row: ProviderCredentialRow): StoredCredential {
+  return {
+    ...toSummary(row),
+    userId: row.user_id,
+    sealed: {
+      kekId: row.kek_id,
+      algorithm: row.algorithm,
+      wrappedDek: row.wrapped_dek,
+      dekNonce: row.dek_nonce,
+      secretCiphertext: row.secret_ciphertext,
+      secretNonce: row.secret_nonce,
+      aadVersion: row.aad_version,
+    },
+  }
+}
+
+/**
+ * The columns a screen is allowed to see. Written out rather than `selectAll()`
+ * so that adding a column to the table never silently widens what a list
+ * endpoint returns — and the columns left out here are the sealed bytes.
+ */
+const SUMMARY_COLUMNS = [
+  'id',
+  'provider',
+  'kind',
+  'label',
+  'last_four',
+  'status',
+  'verified_at',
+  'last_used_at',
+  'created_at',
+] as const
+
+function makeCredentials(trx: Transaction<Database>): CredentialsRepo {
+  return {
+    async listProviders() {
+      const rows = await trx.selectFrom('provider').selectAll().orderBy('name').execute()
+      return rows.map(toProvider)
+    },
+
+    async findProvider(slug) {
+      const row = await trx
+        .selectFrom('provider')
+        .selectAll()
+        .where('slug', '=', slug)
+        .executeTakeFirst()
+      return row ? toProvider(row) : null
+    },
+
+    async listForUser(userId) {
+      const rows = await trx
+        .selectFrom('provider_credential')
+        .select(SUMMARY_COLUMNS)
+        .where('user_id', '=', userId)
+        .where('status', '!=', 'revoked')
+        .orderBy('provider')
+        .execute()
+
+      // The row here has no sealed bytes at all, by construction: the select list
+      // never asked for them.
+      return rows.map((row) => ({
+        id: row.id,
+        provider: row.provider,
+        kind: row.kind,
+        label: row.label,
+        lastFour: row.last_four,
+        status: row.status,
+        verifiedAt: row.verified_at,
+        lastUsedAt: row.last_used_at,
+        createdAt: row.created_at,
+      }))
+    },
+
+    async findActive(userId, provider) {
+      const row = await trx
+        .selectFrom('provider_credential')
+        .selectAll()
+        .where('user_id', '=', userId)
+        .where('provider', '=', provider)
+        .where('status', '=', 'active')
+        .orderBy('created_at', 'desc')
+        .executeTakeFirst()
+      return row ? toStored(row) : null
+    },
+
+    async findById(userId, id) {
+      const row = await trx
+        .selectFrom('provider_credential')
+        .selectAll()
+        .where('user_id', '=', userId)
+        .where('id', '=', id)
+        .executeTakeFirst()
+      return row ? toStored(row) : null
+    },
+
+    async insert(input) {
+      const row = await trx
+        .insertInto('provider_credential')
+        .values({
+          id: input.id,
+          user_id: input.userId,
+          provider: input.provider,
+          kind: input.kind,
+          label: input.label,
+          kek_provider: input.kekProvider,
+          kek_id: input.sealed.kekId,
+          wrapped_dek: input.sealed.wrappedDek,
+          dek_nonce: input.sealed.dekNonce,
+          secret_ciphertext: input.sealed.secretCiphertext,
+          secret_nonce: input.sealed.secretNonce,
+          aad_version: input.sealed.aadVersion,
+          algorithm: input.sealed.algorithm,
+          fingerprint: input.fingerprint,
+          last_four: input.lastFour,
+        })
+        .returning(SUMMARY_COLUMNS)
+        .executeTakeFirstOrThrow()
+
+      return {
+        id: row.id,
+        provider: row.provider,
+        kind: row.kind,
+        label: row.label,
+        lastFour: row.last_four,
+        status: row.status,
+        verifiedAt: row.verified_at,
+        lastUsedAt: row.last_used_at,
+        createdAt: row.created_at,
+      }
+    },
+
+    async markVerified(id, at) {
+      await trx
+        .updateTable('provider_credential')
+        .set({ verified_at: at, status: 'active', auth_failures: 0 })
+        .where('id', '=', id)
+        .execute()
+    },
+
+    async recordAuthFailure(id) {
+      // Three consecutive failures mark it invalid. Otherwise every queued job
+      // keeps burning attempts against a key the provider already rejected, and
+      // some providers rate-limit on failed auth.
+      const row = await trx
+        .updateTable('provider_credential')
+        .set((eb) => ({ auth_failures: eb('auth_failures', '+', 1) }))
+        .where('id', '=', id)
+        .returning('auth_failures')
+        .executeTakeFirst()
+
+      const failures = row?.auth_failures ?? 0
+
+      if (failures >= 3) {
+        await trx
+          .updateTable('provider_credential')
+          .set({ status: 'invalid' })
+          .where('id', '=', id)
+          .execute()
+      }
+
+      return failures
+    },
+
+    async revoke(id, at) {
+      await trx
+        .updateTable('provider_credential')
+        .set({ status: 'revoked', revoked_at: at })
+        .where('id', '=', id)
+        .execute()
+    },
+
+    async recordEvent(input) {
+      await trx
+        .insertInto('credential_event')
+        .values({
+          credential_id: input.credentialId,
+          user_id: input.userId,
+          provider: input.provider,
+          action: input.action,
+          detail: (input.detail ?? {}) as never,
+          ip_hash: input.ipHash,
         })
         .execute()
     },

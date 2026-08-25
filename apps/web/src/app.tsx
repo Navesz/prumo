@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { api, formatUsd, newCommandId } from './api.js'
+import { Credentials } from './credentials.js'
 
 /**
  * M1's screen. It exists to prove one thing end to end: the contract types both
@@ -30,11 +31,11 @@ export function App() {
         <header className="flex flex-col gap-2">
           <div className="flex items-baseline gap-3">
             <h1 className="text-3xl font-semibold tracking-tight">Prumo</h1>
-            <span className="font-mono text-xs text-(--color-brass)">M1</span>
+            <span className="font-mono text-xs text-(--color-brass)">M2</span>
           </div>
           <p className="text-sm text-(--color-ink-muted)">
-            Esqueleto vertical. Conta, sessão, isolamento e teto de gasto — nenhuma geração de
-            imagem existe ainda.
+            Conta, sessão, isolamento, teto de gasto e cofre de chaves. Nenhuma geração de imagem
+            existe ainda — é o próximo marco.
           </p>
         </header>
 
@@ -186,6 +187,8 @@ function SignedIn({ user }: { user: { email: string; role: string; timezone: str
           </button>
         </div>
       </Panel>
+
+      <Credentials />
 
       <Panel>
         <h2 className="mb-1 text-sm font-medium">Tetos de gasto</h2>

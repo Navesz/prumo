@@ -76,8 +76,94 @@ export interface Database {
   sessions: SessionsTable
   budgets: BudgetsTable
   processed_commands: ProcessedCommandsTable
+  provider: ProviderTable
+  provider_credential: ProviderCredentialTable
+  credential_event: CredentialEventTable
 }
 
 export type UserRow = Selectable<UsersTable>
 export type SessionRow = Selectable<SessionsTable>
 export type BudgetRow = Selectable<BudgetsTable>
+
+// --- M2: the provider catalogue and the key vault ------------------------------
+
+export interface ProviderTable {
+  slug: string
+  name: string
+  active: DefaultedBoolean
+  auth_style: 'bearer' | 'key' | 'x-api-key' | 'x-key' | 'x-goog-api-key'
+  mode: 'sync' | 'queue' | 'both'
+  concurrency_default: DefaultedNumber
+  output_ttl_seconds: number | null
+  cost_in_response: DefaultedCostSource
+  doc_url: string | null
+  notice: string | null
+  verified_at: Timestamp | null
+}
+
+/**
+ * The vault row.
+ *
+ * `secret_ciphertext` is never selected by any read path that reaches a route:
+ * there is no endpoint that returns a secret, masked or otherwise. The screen
+ * gets `last_four` and `verified_at`.
+ */
+export interface ProviderCredentialTable {
+  id: string
+  user_id: string
+  provider: string
+  kind: 'api_key' | 'oauth_refresh' | 'webhook_secret'
+  label: string | null
+
+  kek_provider: DefaultedKekProvider
+  kek_id: string
+  wrapped_dek: Buffer
+  dek_nonce: Buffer
+  secret_ciphertext: Buffer
+  secret_nonce: Buffer
+  aad_version: DefaultedNumber
+  algorithm: DefaultedAlgorithm
+
+  fingerprint: Buffer
+  last_four: string
+
+  status: DefaultedCredentialStatus
+  auth_failures: DefaultedNumber
+  verified_at: Timestamp | null
+  last_used_at: Timestamp | null
+  created_at: DefaultedTimestamp
+  revoked_at: Timestamp | null
+}
+
+export interface CredentialEventTable {
+  id: Generated<number>
+  credential_id: string | null
+  user_id: string
+  provider: string
+  action: 'created' | 'verified' | 'used' | 'auth_failed' | 'rewrapped' | 'revoked' | 'deleted'
+  detail: unknown
+  ip_hash: Buffer | null
+  at: DefaultedTimestamp
+}
+
+type DefaultedBoolean = ColumnType<boolean, boolean | undefined, boolean>
+type DefaultedNumber = ColumnType<number, number | undefined, number>
+type DefaultedAlgorithm = ColumnType<'AES-256-GCM', 'AES-256-GCM' | undefined, 'AES-256-GCM'>
+type DefaultedKekProvider = ColumnType<
+  'env' | 'awskms' | 'gcpkms',
+  'env' | 'awskms' | 'gcpkms' | undefined,
+  'env' | 'awskms' | 'gcpkms'
+>
+type DefaultedCredentialStatus = ColumnType<
+  'active' | 'invalid' | 'revoked',
+  'active' | 'invalid' | 'revoked' | undefined,
+  'active' | 'invalid' | 'revoked'
+>
+type DefaultedCostSource = ColumnType<
+  'exact' | 'units' | 'none',
+  'exact' | 'units' | 'none' | undefined,
+  'exact' | 'units' | 'none'
+>
+
+export type ProviderRow = Selectable<ProviderTable>
+export type ProviderCredentialRow = Selectable<ProviderCredentialTable>

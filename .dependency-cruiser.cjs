@@ -63,9 +63,20 @@ module.exports = {
       name: 'providers-are-isolated',
       severity: 'error',
       comment:
-        'A provider adapter talks to one vendor and returns plain data. It never reaches the database or the domain — otherwise every vendor quirk leaks into the model. (No adapters exist yet; the door is open before anyone walks through it.)',
+        'A provider adapter talks to one vendor and returns plain data. It never reaches the database, the domain or the HTTP layer — otherwise every vendor quirk leaks into the model.',
       from: { path: '^apps/server/src/providers' },
-      to: { path: '^apps/server/src/(db|domain|http|app)' },
+      to: { path: '^apps/server/src/(db|domain|http)' },
+    },
+    {
+      name: 'adapters-import-only-their-port',
+      severity: 'error',
+      comment:
+        'An adapter may import the TYPE of the port it implements and nothing else from app/. Implementation depending on port is the correct direction; importing a use case, a value or a helper from app/ is the wrong one, and it is how a vendor quirk starts driving a business rule. Type-only is allowed, value imports are not.',
+      from: { path: '^apps/server/src/(providers|vault|storage)' },
+      to: {
+        path: '^apps/server/src/app',
+        dependencyTypesNot: ['type-only'],
+      },
     },
     {
       name: 'no-axios-anywhere',
