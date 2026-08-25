@@ -25,6 +25,22 @@ exclude = [
   "^https://github\\.com/Navesz/prumo/issues/[0-9]+",
   "^https://github\\.com/Navesz/prumo/compare/",
   "^https://github\\.com/Navesz/prumo/releases/tag/",
+
+  # API ENDPOINTS, not documentation links.
+  #
+  # docs/PROVEDORES.md records the exact endpoint of every provider, which is the
+  # most useful thing in that file. A link checker cannot verify them: they answer to
+  # POST, several carry a `{model_id}` placeholder, and a bare GET gets 404 or
+  # 405 by design. Forty-eight of those were the entire failure.
+  #
+  # There is a second reason, and it matters more: probing thirteen providers'
+  # API endpoints on every push is unsolicited traffic against somebody else's
+  # infrastructure, and it looks like scanning. Their DOCUMENTATION pages stay in
+  # the check, and those are the links that can actually rot.
+  "^https?://(api|queue)[.-][a-z0-9.-]+/",
+  "^https://fal\\.run/",
+  "^https://[a-z0-9.-]+/v[0-9]+/",
+  "%7B",
 ]
 
 exclude_path = [
