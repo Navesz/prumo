@@ -59,9 +59,18 @@ afterAll(async () => {
   await adminPool.end().catch(() => undefined)
 })
 
+/*
+ * Sem Postgres, o teste é PULADO — nunca aprovado.
+ *
+ * `return` cedo faz o vitest reportar "passed" para um corpo que não asseriu
+ * nada: quem roda sem banco vê a suíte inteira verde e acredita que a camada de
+ * dados foi verificada. É a mesma doença que a config do lychee e o
+ * dependency-review tinham — um passo que parece guardar algo e não guarda.
+ * `ctx.skip()` marca a linha como pulada, e a contagem final denuncia.
+ */
 const run = (name: string, fn: () => Promise<void>) =>
-  it(name, async () => {
-    if (!reachable) return
+  it(name, async (ctx) => {
+    if (!reachable) ctx.skip(`sem Postgres em DATABASE_URL_TEST — este teste não rodou`)
     await fn()
   })
 
@@ -158,6 +167,33 @@ describe('the key vault, against a real database', () => {
 
     await add()
     await expect(add()).rejects.toThrow(AppError)
+  })
+
+  run('answers a repeated command with the same credential, not with an error', async () => {
+    // Um clique duplo, ou um cliente que reenvia depois de um timeout, manda o
+    // MESMO commandId. Isso respondia CREDENTIAL_DUPLICATE — um fato errado sobre
+    // a chave da pessoa, que a fazia parar de tentar. Idempotência é devolver a
+    // mesma resposta, e é o que `auth.ts` já fazia no registro.
+    const user = await makeUser()
+    const commandId = ids.next()
+    const enviar = () =>
+      credentials.add(user, {
+        commandId,
+        provider: 'replicate',
+        secret: `${SECRET}-idem`,
+        label: 'a mesma',
+        ipHash: null,
+      })
+
+    const primeira = await enviar()
+    const segunda = await enviar()
+
+    expect(segunda.credential.id).toBe(primeira.credential.id)
+    expect(await credentials.list(user)).toHaveLength(1)
+
+    // E a verificação foi anotada na credencial que existe, não no id novo que o
+    // segundo envio gerou e descartou.
+    expect(segunda.credential.verifiedAt).not.toBeNull()
   })
 
   run("does not let one user see, verify or revoke another user's key", async () => {
