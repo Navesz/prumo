@@ -145,7 +145,7 @@
 
 **Índices.** PARCIAL (usuario_id, criada_em desc, id desc) WHERE excluida_em IS NULL — keyset da galeria · (geracao_id) · PARCIAL (usuario_id) WHERE favorita · PARCIAL (visibilidade) WHERE visibilidade='publica'
 
-**Por quê.** O Herz decidiu 'guarda a referência, nunca os bytes'; aqui os bytes SÃO o produto e não há uma única <img> de conteúdo no frontend dele para copiar. largura/altura na linha porque a grade reserva a caixa por aspect-ratio ANTES de a imagem chegar. QUEBRA QUANDO VIOLADO: sem isso a galeria pula quando as miniaturas carregam, o que num celular com rolagem longa é a diferença entre usável e insuportável. `alt` é o sétimo item de acessibilidade que o Herz não precisava ter. `expurgo_em` nasce na primeira migration: retenção decidida DEPOIS vira migração de dado grande, e é ela que decide se o custo de armazenamento cresce para sempre.
+**Por quê.** O Herz decidiu 'guarda a referência, nunca os bytes'; aqui os bytes SÃO o produto e não há uma única `<img>` de conteúdo no frontend dele para copiar. largura/altura na linha porque a grade reserva a caixa por aspect-ratio ANTES de a imagem chegar. QUEBRA QUANDO VIOLADO: sem isso a galeria pula quando as miniaturas carregam, o que num celular com rolagem longa é a diferença entre usável e insuportável. `alt` é o sétimo item de acessibilidade que o Herz não precisava ter. `expurgo_em` nasce na primeira migration: retenção decidida DEPOIS vira migração de dado grande, e é ela que decide se o custo de armazenamento cresce para sempre.
 
 ---
 

@@ -60,7 +60,7 @@ representative at an online or offline event.
 
 Instances of abusive, harassing, or otherwise unacceptable behavior may be
 reported to the community leaders responsible for enforcement at
-**leonardonavesworking@gmail.com**.
+**<leonardonavesworking@gmail.com>**.
 All complaints will be reviewed and investigated promptly and fairly.
 
 All community leaders are obligated to respect the privacy and security of the
@@ -138,7 +138,7 @@ For answers to common questions about this code of conduct, see the FAQ at
 These notes are Prumo's, not part of the Contributor Covenant text above.
 
 **Do not put a conduct report in a public issue.** Email
-leonardonavesworking@gmail.com. If your report concerns the maintainer who reads
+<leonardonavesworking@gmail.com>. If your report concerns the maintainer who reads
 that mailbox, use the repository's
 [private vulnerability-reporting form](https://github.com/Navesz/prumo/security/advisories/new)
 and begin the summary with `[Conduct]`. That form is a private transport for the

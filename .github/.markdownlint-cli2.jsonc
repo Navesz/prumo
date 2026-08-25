@@ -32,6 +32,19 @@
     // highlighter treat prose as code.
     "MD040": false,
 
+    // MD034 bare URLs. docs/PROVEDORES.md is a survey whose most useful content
+    // is the exact endpoint of each of the thirteen providers, printed as a bare
+    // URL 123 times. Wrapping every one in angle brackets would add noise to the
+    // only thing a reader goes to that file for, and GitHub autolinks them
+    // anyway. The rule is right in prose and wrong in a reference table.
+    "MD034": false,
+
+    // MD029 ordered list prefix. adr/0010 quotes blockers 2 and 3 of PLANO.md
+    // §14 and PRESERVES their numbering, because renumbering them to 1 and 2
+    // would break the reference to the source. A quotation that renumbers its
+    // source is a quotation that lies quietly.
+    "MD029": false,
+
     // MD060 table column count stays ENABLED, and it currently fails.
     //
     // docs/PROVEDORES.md lines 68, 118 and 168 contain an unescaped `|` inside
