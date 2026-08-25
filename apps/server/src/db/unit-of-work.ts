@@ -35,6 +35,12 @@ async function applyScope(trx: Transaction<Database>, scope: Scope): Promise<voi
     return
   }
 
+  if (scope.kind === 'public') {
+    await sql`SELECT set_config('app.user_id', '', true)`.execute(trx)
+    await sql`SELECT set_config('app.bypass_rls', 'off', true)`.execute(trx)
+    return
+  }
+
   await sql`SELECT set_config('app.user_id', '', true)`.execute(trx)
   await sql`SELECT set_config('app.bypass_rls', 'on', true)`.execute(trx)
 }

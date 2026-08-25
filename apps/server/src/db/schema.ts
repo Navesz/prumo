@@ -79,6 +79,8 @@ export interface Database {
   provider: ProviderTable
   provider_credential: ProviderCredentialTable
   credential_event: CredentialEventTable
+  model: ModelTable
+  price: PriceTable
 }
 
 export type UserRow = Selectable<UsersTable>
@@ -167,3 +169,48 @@ type DefaultedCostSource = ColumnType<
 
 export type ProviderRow = Selectable<ProviderTable>
 export type ProviderCredentialRow = Selectable<ProviderCredentialTable>
+
+// --- M3: the price index --------------------------------------------------------
+
+export interface ModelTable {
+  id: string
+  provider: string
+  endpoint_id: string
+  name: string
+  family: string | null
+  tasks: string[]
+  watermark: DefaultedWatermark
+  license: string | null
+  thumbnail_url: string | null
+  description: string | null
+  active: DefaultedBoolean
+  discontinued_at: Timestamp | null
+  first_seen_at: DefaultedTimestamp
+  last_seen_at: DefaultedTimestamp
+}
+
+export interface PriceTable {
+  id: Generated<number>
+  model_id: string
+  effective_from: DefaultedTimestamp
+  effective_to: Timestamp | null
+  basis: 'per_image' | 'per_megapixel' | 'per_step' | 'per_second' | 'per_output_token' | 'formula'
+  /** nano-USD, integer. The pg driver returns int8 as a string without the parser. */
+  unit_nano: bigint
+  formula: unknown
+  currency: ColumnType<string, string | undefined, string>
+  tokens_per_image: number | null
+  source: string
+  collected_at: Timestamp
+  method: 'doc' | 'api' | 'measured' | 'estimated'
+  note: string | null
+}
+
+type DefaultedWatermark = ColumnType<
+  'synthid' | 'none' | 'unknown',
+  'synthid' | 'none' | 'unknown' | undefined,
+  'synthid' | 'none' | 'unknown'
+>
+
+export type ModelRow = Selectable<ModelTable>
+export type PriceRow = Selectable<PriceTable>

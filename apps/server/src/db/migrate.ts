@@ -3,6 +3,9 @@ import { Migrator, type Migration, type MigrationProvider } from 'kysely/migrati
 import * as base from './migrations/20260824_0001_base.js'
 import * as appRole from './migrations/20260825_0002_app_role.js'
 import * as credentials from './migrations/20260825_0003_credentials.js'
+import * as bootstrapCommands from './migrations/20260825_0004_bootstrap_commands.js'
+import * as catalog from './migrations/20260825_0005_catalog.js'
+import * as openrouter from './migrations/20260825_0006_openrouter.js'
 import type { Database } from './schema.js'
 
 /**
@@ -25,6 +28,9 @@ const migrations: Record<string, Migration> = {
   '20260824_0001_base': base,
   '20260825_0002_app_role': appRole,
   '20260825_0003_credentials': credentials,
+  '20260825_0004_bootstrap_commands': bootstrapCommands,
+  '20260825_0005_catalog': catalog,
+  '20260825_0006_openrouter': openrouter,
 }
 
 class StaticMigrationProvider implements MigrationProvider {

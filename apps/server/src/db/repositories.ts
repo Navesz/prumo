@@ -1,8 +1,10 @@
 import type { Transaction } from 'kysely'
+import { formulaFromJson } from './catalog.js'
 import type {
   BudgetRecord,
   BudgetsRepo,
   CommandsRepo,
+  CatalogRepo,
   CredentialsRepo,
   CredentialSummary,
   NewUser,
@@ -29,6 +31,7 @@ export function makeRepos(trx: Transaction<Database>): Repos {
     budgets: makeBudgets(trx),
     commands: makeCommands(trx),
     credentials: makeCredentials(trx),
+    catalog: makeCatalog(trx),
   }
 }
 
@@ -460,6 +463,73 @@ function makeCredentials(trx: Transaction<Database>): CredentialsRepo {
           ip_hash: input.ipHash,
         })
         .execute()
+    },
+  }
+}
+
+// --- M3: the price index --------------------------------------------------------
+
+function makeCatalog(trx: Transaction<Database>): CatalogRepo {
+  return {
+    async list() {
+      // Left join on the CURRENT price row, so a model with no published price is
+      // still listed. Hiding those would make thirteen providers look like they
+      // publish more than they do — fal alone lists 513 image models whose price
+      // is not in its catalogue payload.
+      const rows = await trx
+        .selectFrom('model')
+        .innerJoin('provider', 'provider.slug', 'model.provider')
+        .leftJoin('price', (join) =>
+          join.onRef('price.model_id', '=', 'model.id').on('price.effective_to', 'is', null),
+        )
+        .where('model.active', '=', true)
+        .where('provider.active', '=', true)
+        .select([
+          'model.id as model_id',
+          'model.provider as provider',
+          'provider.name as provider_name',
+          'model.name as name',
+          'model.family as family',
+          'model.tasks as tasks',
+          'model.watermark as watermark',
+          'model.thumbnail_url as thumbnail_url',
+          'price.basis as basis',
+          'price.unit_nano as unit_nano',
+          'price.tokens_per_image as tokens_per_image',
+          'price.formula as formula',
+          'price.source as source',
+          'price.collected_at as collected_at',
+          'price.method as method',
+          'price.note as note',
+        ])
+        .execute()
+
+      return rows.map((row) => ({
+        modelId: row.model_id,
+        provider: row.provider,
+        providerName: row.provider_name,
+        name: row.name,
+        family: row.family,
+        tasks: row.tasks,
+        watermark: row.watermark,
+        thumbnailUrl: row.thumbnail_url,
+        price:
+          row.basis === null || row.unit_nano === null
+            ? null
+            : {
+                basis: row.basis,
+                unitNano: row.unit_nano,
+                tokensPerImage: row.tokens_per_image,
+                // jsonb hands money back as a STRING, because JSON has no bigint.
+                // Without this the pure pricing function multiplies a string and
+                // throws "Cannot mix BigInt and other types" — at request time.
+                formula: formulaFromJson(row.formula),
+                source: row.source ?? '',
+                collectedAt: row.collected_at ?? new Date(0),
+                method: row.method ?? 'doc',
+                note: row.note,
+              },
+      }))
     },
   }
 }

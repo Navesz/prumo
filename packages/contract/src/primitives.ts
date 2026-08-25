@@ -148,3 +148,32 @@ export type Verification = z.infer<typeof verification>
  * is the most common reason a perfectly good key is rejected.
  */
 export const providerSecret = z.string().trim().min(8).max(4096)
+
+/**
+ * One row of the price index.
+ *
+ * `costNanoUsd` is null when the price cannot honestly be compared — a
+ * per-second video rate, or a per-token price with no tokens-per-image figure
+ * recorded. `explanation` always says which, because a blank cell in a price
+ * table is read as "free" or as a bug.
+ */
+export const indexEntry = z.object({
+  modelId: z.string(),
+  provider: providerSlug,
+  providerName: z.string(),
+  name: z.string(),
+  family: z.string().nullable(),
+  tasks: z.array(z.string()),
+  watermark: z.enum(['synthid', 'none', 'unknown']),
+  costNanoUsd: nanoUsd.nullable(),
+  explanation: z.string(),
+  basis: z.string().nullable(),
+  source: z.string().nullable(),
+  collectedAt: timestamp.nullable(),
+  method: z.string().nullable(),
+  /** Above thirty days old a price leaves the ranking instead of aging into a lie. */
+  fresh: z.boolean(),
+  note: z.string().nullable(),
+})
+
+export type IndexEntry = z.infer<typeof indexEntry>

@@ -283,3 +283,70 @@ describe('the key vault, against a real database', () => {
     expect(await credentials.list(user)).toHaveLength(0)
   })
 })
+
+/**
+ * The path a real person takes, through the real code, in order.
+ *
+ * This describe block exists because of a bug that every other kind of test
+ * missed. Migration 0001 created the bootstrap row-level-security policy for
+ * three tables and not for the fourth, so registration failed on its very first
+ * write — and the type checker, the boundary rules and the integration suite all
+ * passed, because none of them ever ran `register` against a real database.
+ *
+ * It took starting the application and pressing the button. So now the button is
+ * a test.
+ */
+describe('the first minutes of a new account', () => {
+  run('registers, signs in, and lands with a zero cap and no keys', async () => {
+    const { createAuth } = await import('../src/app/auth.js')
+    const { createBudgets } = await import('../src/app/budgets.js')
+    const { createPasswordHasher, createSessionTokens } =
+      await import('../src/security/identity.js')
+
+    const auth = createAuth({
+      uow,
+      clock,
+      ids,
+      passwords: createPasswordHasher(),
+      tokens: createSessionTokens(),
+      // 'publico' so the test does not depend on being the first account in a
+      // database other tests have already written to.
+      mode: 'publico',
+      sessionTtlDays: 30,
+    })
+
+    const email = `novo-${ids.next()}@prumo.test`
+    const password = 'uma-senha-bem-longa' // alicerce-segredo-ok: senha de teste, conta descartavel
+
+    const registered = await auth.register({
+      commandId: ids.next(),
+      email,
+      password,
+      timezone: 'America/Sao_Paulo',
+      ipHash: null,
+      uaHash: null,
+    })
+
+    expect(registered.user.email).toBe(email)
+    expect(registered.sessionToken).toHaveLength(43)
+
+    // The session works, which means the cookie the browser gets works.
+    const authenticated = await auth.authenticate(registered.sessionToken)
+    expect(authenticated?.id).toBe(registered.user.id)
+
+    // A new account cannot spend a cent until somebody writes a number. The
+    // alternative — a helpful default — is a system that spends money nobody
+    // authorised.
+    const budgets = createBudgets({ uow, clock, ids })
+    const caps = await budgets.list(registered.user)
+    expect(caps.map((c) => c.period).sort()).toEqual(['day', 'month'])
+    expect(caps.every((c) => c.capNano === 0n)).toBe(true)
+
+    expect(await credentials.list(registered.user)).toHaveLength(0)
+
+    // And signing in again with the same password works.
+    const signedIn = await auth.signIn({ email, password, ipHash: null, uaHash: null })
+    expect(signedIn.user.id).toBe(registered.user.id)
+    expect(signedIn.sessionToken).not.toBe(registered.sessionToken)
+  })
+})

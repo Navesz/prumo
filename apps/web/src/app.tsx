@@ -2,13 +2,17 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { api, formatUsd, newCommandId } from './api.js'
 import { Credentials } from './credentials.js'
+import { PriceIndex } from './index-de-precos.js'
 
 /**
- * M1's screen. It exists to prove one thing end to end: the contract types both
- * sides, a session works, and row level security scopes the data to the caller.
+ * The shape of the product, in the order a person actually needs it.
  *
- * There is no studio here yet, and pretending otherwise would make the first
- * screen of the project a lie. The generation grid arrives with M3.
+ * First the prices, with no account and no key: that is what tells you which
+ * providers are worth opening an account with. Keys and spending caps live under
+ * Settings, behind a sign-in, because they are what you do AFTER deciding.
+ *
+ * The previous version had this backwards — the first thing on screen was a form
+ * asking for an API key, before giving anybody a reason to hand one over.
  */
 
 const keys = {
@@ -16,35 +20,47 @@ const keys = {
   budgets: ['budgets'] as const,
 }
 
+type Screen = 'index' | 'settings'
+
 export function App() {
+  const [screen, setScreen] = useState<Screen>('index')
+
   const session = useQuery({
     queryKey: keys.me,
     queryFn: () => api.auth.me(),
-    // The user leaves their phone and comes back wanting to know whether it is
-    // done. This is the opposite of a factory floor app, so the default flips.
     refetchOnWindowFocus: true,
   })
 
+  const user = session.data?.user ?? null
+
   return (
-    <div className="min-h-dvh px-5 py-10 sm:px-8">
-      <div className="mx-auto flex w-full max-w-2xl flex-col gap-8">
-        <header className="flex flex-col gap-2">
-          <div className="flex items-baseline gap-3">
-            <h1 className="text-3xl font-semibold tracking-tight">Prumo</h1>
-            <span className="font-mono text-xs text-(--color-brass)">M2</span>
+    <div className="min-h-dvh px-5 py-8 sm:px-8">
+      <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
+        <header className="flex flex-wrap items-end justify-between gap-4">
+          <div className="flex flex-col gap-1">
+            <div className="flex items-baseline gap-3">
+              <h1 className="text-3xl font-semibold tracking-tight">Prumo</h1>
+              <span className="font-mono text-xs text-(--color-brass)">M3</span>
+            </div>
+            <p className="max-w-xl text-sm text-(--color-ink-muted)">
+              O preço real de gerar imagem com IA. Nenhuma geração existe ainda — é o próximo marco.
+            </p>
           </div>
-          <p className="text-sm text-(--color-ink-muted)">
-            Conta, sessão, isolamento, teto de gasto e cofre de chaves. Nenhuma geração de imagem
-            existe ainda — é o próximo marco.
-          </p>
+
+          <nav className="flex items-center gap-2 text-sm">
+            <Tab active={screen === 'index'} onClick={() => setScreen('index')}>
+              Preços
+            </Tab>
+            <Tab active={screen === 'settings'} onClick={() => setScreen('settings')}>
+              Configurações
+            </Tab>
+          </nav>
         </header>
 
-        {session.isPending ? (
-          <Panel>
-            <p className="text-sm text-(--color-ink-muted)">Carregando…</p>
-          </Panel>
-        ) : session.data?.user ? (
-          <SignedIn user={session.data.user} />
+        {screen === 'index' ? (
+          <PriceIndex />
+        ) : user ? (
+          <Settings user={user} />
         ) : (
           <SignedOut registrationOpen={session.data?.registrationOpen ?? false} />
         )}
@@ -61,107 +77,10 @@ function Panel({ children }: { children: React.ReactNode }) {
   )
 }
 
-function SignedOut({ registrationOpen }: { registrationOpen: boolean }) {
-  const queryClient = useQueryClient()
-  const [mode, setMode] = useState<'sign-in' | 'register'>(
-    registrationOpen ? 'register' : 'sign-in',
-  )
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState<string | null>(null)
-
-  const submit = useMutation({
-    // Never retried. From M3 each attempt spends real money, which makes this a
-    // stronger rule here than the usual "avoid duplicate writes".
-    retry: false,
-    mutationFn: async () => {
-      if (mode === 'register') {
-        return api.auth.register({
-          commandId: newCommandId(),
-          email,
-          password,
-          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-        })
-      }
-      return api.auth.signIn({ email, password })
-    },
-    onSuccess: async () => {
-      setError(null)
-      await queryClient.invalidateQueries()
-    },
-    onError: (cause: unknown) => {
-      setError(messageFor(cause))
-    },
-  })
-
-  return (
-    <Panel>
-      <div className="mb-4 flex gap-2 text-sm">
-        {registrationOpen && (
-          <Tab active={mode === 'register'} onClick={() => setMode('register')}>
-            Criar conta
-          </Tab>
-        )}
-        <Tab active={mode === 'sign-in'} onClick={() => setMode('sign-in')}>
-          Entrar
-        </Tab>
-      </div>
-
-      <form
-        className="flex flex-col gap-3"
-        onSubmit={(event) => {
-          event.preventDefault()
-          submit.mutate()
-        }}
-      >
-        <Field label="E-mail">
-          <input
-            type="email"
-            autoComplete="email"
-            required
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            className="w-full rounded border border-(--color-line) bg-(--color-ground) px-3 py-2 text-sm"
-          />
-        </Field>
-
-        <Field label="Senha" hint="Mínimo de 12 caracteres.">
-          <input
-            type="password"
-            autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
-            required
-            minLength={12}
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            className="w-full rounded border border-(--color-line) bg-(--color-ground) px-3 py-2 text-sm"
-          />
-        </Field>
-
-        <button
-          type="submit"
-          disabled={submit.isPending}
-          className="mt-1 rounded bg-(--color-brass) px-4 py-2 text-sm font-medium text-(--color-ground) disabled:opacity-60"
-        >
-          {submit.isPending ? 'Enviando…' : mode === 'register' ? 'Criar conta' : 'Entrar'}
-        </button>
-
-        {error && (
-          <p role="status" aria-live="polite" className="text-sm text-(--color-state-failed)">
-            {error}
-          </p>
-        )}
-      </form>
-    </Panel>
-  )
-}
-
-function SignedIn({ user }: { user: { email: string; role: string; timezone: string } }) {
+function Settings({ user }: { user: { email: string; role: string; timezone: string } }) {
   const queryClient = useQueryClient()
 
-  const budgets = useQuery({
-    queryKey: keys.budgets,
-    queryFn: () => api.budget.list(),
-  })
+  const budgets = useQuery({ queryKey: keys.budgets, queryFn: () => api.budget.list() })
 
   const signOut = useMutation({
     retry: false,
@@ -208,6 +127,106 @@ function SignedIn({ user }: { user: { email: string; role: string; timezone: str
         )}
       </Panel>
     </div>
+  )
+}
+
+function SignedOut({ registrationOpen }: { registrationOpen: boolean }) {
+  const queryClient = useQueryClient()
+  const [mode, setMode] = useState<'sign-in' | 'register'>(
+    registrationOpen ? 'register' : 'sign-in',
+  )
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState<string | null>(null)
+
+  const submit = useMutation({
+    retry: false,
+    mutationFn: async () => {
+      if (mode === 'register') {
+        return api.auth.register({
+          commandId: newCommandId(),
+          email,
+          password,
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        })
+      }
+      return api.auth.signIn({ email, password })
+    },
+    onSuccess: async () => {
+      setError(null)
+      await queryClient.invalidateQueries()
+    },
+    onError: (cause: unknown) => {
+      setError(cause instanceof Error ? cause.message : 'Algo falhou. Tente de novo.')
+    },
+  })
+
+  return (
+    <Panel>
+      <p className="mb-4 text-xs text-(--color-ink-muted)">
+        A conta serve para guardar chave e teto de gasto. O índice de preços continua aberto sem
+        ela.
+      </p>
+
+      <div className="mb-4 flex gap-2 text-sm">
+        {registrationOpen && (
+          <Tab active={mode === 'register'} onClick={() => setMode('register')}>
+            Criar conta
+          </Tab>
+        )}
+        <Tab active={mode === 'sign-in'} onClick={() => setMode('sign-in')}>
+          Entrar
+        </Tab>
+      </div>
+
+      <form
+        className="flex max-w-sm flex-col gap-3"
+        onSubmit={(event) => {
+          event.preventDefault()
+          submit.mutate()
+        }}
+      >
+        <label className="flex flex-col gap-1">
+          <span className="text-xs text-(--color-ink-muted)">E-mail</span>
+          <input
+            type="email"
+            autoComplete="email"
+            required
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            className="w-full rounded border border-(--color-line) bg-(--color-ground) px-3 py-2 text-sm"
+          />
+        </label>
+
+        <label className="flex flex-col gap-1">
+          <span className="text-xs text-(--color-ink-muted)">Senha</span>
+          <input
+            type="password"
+            autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
+            required
+            minLength={12}
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            className="w-full rounded border border-(--color-line) bg-(--color-ground) px-3 py-2 text-sm"
+          />
+          <span className="text-xs text-(--color-ink-muted)">Mínimo de 12 caracteres.</span>
+        </label>
+
+        <button
+          type="submit"
+          disabled={submit.isPending}
+          className="mt-1 rounded bg-(--color-brass) px-4 py-2 text-sm font-medium text-(--color-ground) disabled:opacity-60"
+        >
+          {submit.isPending ? 'Enviando…' : mode === 'register' ? 'Criar conta' : 'Entrar'}
+        </button>
+
+        {error && (
+          <p role="status" aria-live="polite" className="text-sm text-(--color-state-failed)">
+            {error}
+          </p>
+        )}
+      </form>
+    </Panel>
   )
 }
 
@@ -296,24 +315,6 @@ function Tab({
   )
 }
 
-function Field({
-  label,
-  hint,
-  children,
-}: {
-  label: string
-  hint?: string
-  children: React.ReactNode
-}) {
-  return (
-    <label className="flex flex-col gap-1">
-      <span className="text-xs text-(--color-ink-muted)">{label}</span>
-      {children}
-      {hint && <span className="text-xs text-(--color-ink-muted)">{hint}</span>}
-    </label>
-  )
-}
-
 /** "10.50" → "10500000000". No float ever enters the pipeline. */
 function usdToNano(usd: string): string {
   const match = /^(\d+)(?:[.,](\d{1,9}))?$/.exec(usd)
@@ -323,11 +324,4 @@ function usdToNano(usd: string): string {
   const fraction = BigInt((match[2] ?? '').padEnd(9, '0'))
 
   return (whole * 1_000_000_000n + fraction).toString(10)
-}
-
-function messageFor(cause: unknown): string {
-  if (cause && typeof cause === 'object' && 'message' in cause) {
-    return String((cause as { message: unknown }).message)
-  }
-  return 'Algo falhou. Tente de novo.'
 }

@@ -145,6 +145,7 @@ export interface Repos {
   readonly budgets: BudgetsRepo
   readonly commands: CommandsRepo
   readonly credentials: CredentialsRepo
+  readonly catalog: CatalogRepo
 }
 
 // --- M2: the key vault ---------------------------------------------------------
@@ -285,4 +286,33 @@ export type VerifyOutcome =
 export interface CredentialVerifier {
   /** Never returns, throws or logs anything derived from the secret. */
   verify(input: { provider: string; secret: string }): Promise<VerifyOutcome>
+}
+
+// --- M3: the price index --------------------------------------------------------
+
+export interface CatalogRow {
+  readonly modelId: string
+  readonly provider: string
+  readonly providerName: string
+  readonly name: string
+  readonly family: string | null
+  readonly tasks: readonly string[]
+  readonly watermark: 'synthid' | 'none' | 'unknown'
+  readonly thumbnailUrl: string | null
+  /** Absent when the provider lists the model but publishes no price for it. */
+  readonly price: {
+    readonly basis: string
+    readonly unitNano: bigint
+    readonly tokensPerImage: number | null
+    readonly formula: unknown
+    readonly source: string
+    readonly collectedAt: Date
+    readonly method: 'doc' | 'api' | 'measured' | 'estimated'
+    readonly note: string | null
+  } | null
+}
+
+export interface CatalogRepo {
+  /** Every model, with its current price. No user scope: nobody owns a price. */
+  list(): Promise<CatalogRow[]>
 }
