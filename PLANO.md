@@ -3,9 +3,22 @@
 > Fio de prumo: a ferramenta que prova que a parede está reta.
 > Aqui, a que prova que o preço está certo — e que a imagem saiu pelo menor preço.
 
-**Estado:** **M0 fechado, M1 de pé, CI verde.** Portão provado, esqueleto vertical
-rodando contra Postgres de verdade, nenhum adaptador de provedor e nenhuma geração
-ainda. Próximo: M2 (cofre de chaves).
+**Estado:** **M0, M1 e M2 fechados. O índice de preço está no ar, público, sem
+conta e sem chave.** Portão provado, Postgres de verdade, cofre com envelope
+AES-256-GCM e RLS de papel restrito, três coletores (fal, DeepInfra, OpenRouter)
+e 648 modelos no catálogo. **Nenhuma geração ainda** — é o próximo marco.
+
+O índice foi antecipado a pedido, fora da ordem da tabela abaixo (lá ele é M6):
+sem ver o preço de tudo, ninguém sabe de qual provedor vale a pena colar a chave.
+A tela usa o rótulo **M3** por causa disso; a tabela de marcos guarda a ordem
+original, e a diferença é deliberada, não deriva.
+
+**Onde a comparação entre provedores está hoje:** três variantes de modelo têm
+preço em mais de um provedor — FLUX.2 [klein] 4B (1,6×), 9B (1,4×) e [pro]
+(2,0×). Três é pouco e é o número honesto: dez dos treze provedores não publicam
+preço legível por máquina, e a regra de identidade recusa todo casamento que ela
+não consegue explicar. Ela chegou a dizer doze, e nove daqueles comparavam
+modelos diferentes.
 **Legenda:** ✅ provado · 🧪 decidido mas não medido · 🔴 bloqueia código · ⬜ planejado
 
 ---
