@@ -1,0 +1,30 @@
+cff-version: 1.2.0
+message: >-
+  If Prumo contributes to your work, cite the software and the exact release or
+  commit used, so the price catalogue and cost model behind any number you
+  report can be reconstructed. The catalogue data is licensed separately under
+  CC BY 4.0 — see LICENSE-DATA for how to attribute it.
+title: Prumo
+type: software
+version: 0.1.0
+date-released: 2026-08-24
+authors:
+  - name: Prumo contributors
+abstract: >-
+  An open-source, self-hosted platform for generating images through the user's
+  own provider API keys: one prompt fanned out across several models at once,
+  the cost of each image on screen before it is spent, a spending ceiling
+  enforced by the database, and a sourced, dated price index across thirteen
+  providers so the cheapest route can be chosen instead of guessed. This release
+  identifies a pre-release repository: the architecture, database schema and
+  provider survey are written, and no product feature is implemented yet.
+license: Apache-2.0
+repository-code: https://github.com/Navesz/prumo
+url: https://navesz.github.io/prumo/
+keywords:
+  - ai image generation
+  - api cost
+  - byok
+  - model routing
+  - price index
+  - self-hosted

@@ -1,0 +1,205 @@
+name: New provider
+description: Propose a generation provider for Prumo to support
+title: '[Provider]: '
+labels: ['area: providers', 'type: feature', 'needs-triage']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        An adapter is not the hard part. What decides whether a provider can be
+        supported at all is a short list of facts that are usually buried, and
+        two of them have already forced architecture decisions here: BFL output
+        URLs expire in **10 minutes**, which is why the queue is ordered by
+        deadline instead of arrival, and WaveSpeed warns in writing that a
+        disconnected response can still correspond to a prediction that was
+        accepted and billed, which is why the `duvida_de_cobranca` state exists.
+
+        Fill this in from the provider's own documentation, with URLs. "I think
+        it returns the cost" is not usable — the ledger either reports a fact or
+        admits it is an estimate, and that choice is made per provider, here.
+
+        **Never paste your key.** Not to demonstrate the header format: write
+        `Authorization: Bearer <REDACTED>`.
+  - type: input
+    id: name
+    attributes:
+      label: Provider name
+      description: The name as it bills you, plus the API host.
+      placeholder: 'Acme Imaging — api.acme.example'
+    validations:
+      required: true
+  - type: input
+    id: docs
+    attributes:
+      label: API documentation URL
+      description: The reference for the image generation endpoint itself, not the marketing home page.
+    validations:
+      required: true
+  - type: input
+    id: pricing
+    attributes:
+      label: Pricing page URL
+      description: >-
+        Required for the catalog. If the provider does not publish prices
+        publicly, write "not published" — that is a finding, not a blank.
+    validations:
+      required: true
+  - type: dropdown
+    id: auth_header
+    attributes:
+      label: Authentication header
+      description: >-
+        Exactly as sent. This varies more than anyone expects across the
+        thirteen already mapped — fal.ai uses `Authorization: Key` and not
+        Bearer, Google uses `x-goog-api-key`, BFL uses `x-key`, Segmind uses
+        `x-api-key` and returns 401 if `Authorization` is sent alongside it.
+      options:
+        - 'Authorization: Bearer <key>'
+        - 'Authorization: Key <key>'
+        - 'Authorization: <key> (no scheme)'
+        - 'x-api-key'
+        - 'x-key'
+        - 'x-goog-api-key'
+        - Query string parameter
+        - Something else (describe below)
+    validations:
+      required: true
+  - type: input
+    id: auth_detail
+    attributes:
+      label: Authentication details
+      description: >-
+        Header name if "something else"; whether a second header is required;
+        whether sending an extra auth header breaks the request; whether the key
+        is per-project or per-organization.
+      placeholder: 'Sending Authorization together with x-api-key returns 401'
+  - type: dropdown
+    id: mode
+    attributes:
+      label: Synchronous or queued
+      options:
+        - Synchronous — the image comes back in the POST response
+        - Queued — POST returns a job id, result is fetched later
+        - Both, selected per endpoint or per parameter
+        - Streaming
+    validations:
+      required: true
+  - type: input
+    id: poll
+    attributes:
+      label: If queued — how the result is fetched
+      description: >-
+        Polling URL, recommended interval, and whether the URL can be
+        reconstructed from the job id or must be stored whole. BFL documents
+        that it must be stored whole; WaveSpeed asks for no polling faster than
+        2 seconds.
+  - type: dropdown
+    id: output
+    attributes:
+      label: Output format
+      options:
+        - URL to a hosted file
+        - Base64 in the response body
+        - Either, selectable by a request parameter
+        - Raw bytes in the response body
+    validations:
+      required: true
+  - type: input
+    id: ttl
+    attributes:
+      label: Output TTL — how long the result stays retrievable
+      description: >-
+        The single most important field on this form. Replicate deletes the
+        record after 1 hour; BFL after 10 minutes. Say where the number is
+        documented. "Not documented" is an acceptable answer and is itself a
+        risk we record.
+      placeholder: '10 minutes — stated on <docs URL>, read 2026-08-24'
+    validations:
+      required: true
+  - type: dropdown
+    id: cost_in_response
+    attributes:
+      label: Does the response carry the cost?
+      description: >-
+        Decides whether the ledger row is `exato`, `derivado`, or `estimado` for
+        this provider. Replicate has no billing API at all, so its ledger is an
+        estimate permanently — and that is shown to the user rather than hidden.
+      options:
+        - 'Yes — a settled cost in USD, always'
+        - 'Yes, but only on a specific response shape or with an opt-in flag'
+        - 'Partially — tokens, credits, or compute time that must be converted'
+        - 'No, but a billing or usage API exists'
+        - 'No, and there is no billing API — the ledger would be an estimate forever'
+        - Unknown
+    validations:
+      required: true
+  - type: input
+    id: cost_field
+    attributes:
+      label: Where the cost appears
+      description: The field path and its unit, and the opt-in flag if there is one.
+      placeholder: 'data.cost, USD float, requires includeCost: true'
+  - type: dropdown
+    id: webhook
+    attributes:
+      label: Webhooks
+      options:
+        - Supported and cryptographically signed
+        - Supported but unsigned
+        - Supported, signing not documented
+        - Not supported
+        - Unknown
+    validations:
+      required: true
+  - type: input
+    id: webhook_detail
+    attributes:
+      label: Webhook details
+      description: >-
+        Signature scheme and header, replay window, and redelivery behavior.
+        fal.ai redelivers up to 31 times, which is only harmless because the
+        generation row has a unique key on (provider, provider_job_id).
+  - type: textarea
+    id: limits
+    attributes:
+      label: Known rate limits and concurrency limits
+      description: >-
+        Requests per minute, concurrent jobs, whether the limit rises with
+        account age or spend, what a 429 looks like, and whether `Retry-After`
+        or an equivalent header is sent. WaveSpeed's Bronze tier allows 2
+        concurrent and 5 per minute, which is enough to make fan-out a lie on a
+        new account — so the queue position is shown on screen instead.
+    validations:
+      required: true
+  - type: dropdown
+    id: idempotency
+    attributes:
+      label: Idempotency on submission
+      description: >-
+        Without it, a read timeout must not be retried: the request may already
+        be billed, and the generation goes to `duvida_de_cobranca` instead.
+      options:
+        - 'Yes — an idempotency key header is documented'
+        - 'No'
+        - Not documented
+    validations:
+      required: true
+  - type: textarea
+    id: traps
+    attributes:
+      label: Traps
+      description: >-
+        Anything that would waste a day: moderation returned as HTTP 200,
+        nested request bodies that are actually an SDK convention, JSON returned
+        as a string inside JSON, a CDN that rejects a blank User-Agent with 403,
+        identity verification required before the endpoint answers, models
+        deprecated while the route still responds.
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Confirmation
+      options:
+        - label: Every claim above comes from the provider's own documentation or from a request I actually made, and unverified fields say so.
+          required: true
+        - label: No API key appears anywhere in this report.
+          required: true

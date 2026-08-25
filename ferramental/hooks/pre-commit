@@ -1,0 +1,29 @@
+#!/bin/sh
+# Hook antes do commit — SÓ O QUE É RÁPIDO.
+#
+# Hook lento é hook desligado, e hook desligado verifica zero. O alvo é menos de
+# 5 segundos. Nada de typecheck, nada de teste, nada de build: isso é trabalho
+# do `verificar` e do CI.
+#
+# Aqui mora apenas o que precisa ser barrado ANTES de existir, porque depois já
+# é tarde: segredo, uma vez no histórico, exige rotação — não commit novo.
+#
+# Instale com: node ferramental/hooks/instalar.mjs
+# Pule uma vez com: git commit --no-verify
+
+set -e
+
+RAIZ=$(git rev-parse --show-toplevel)
+cd "$RAIZ"
+
+# 1. Segredo no que está em stage. Único passo obrigatório do hook.
+node ferramental/segredo/varrer-segredo.mjs --staged
+
+# 2. Formatação, se o projeto tiver formatador configurado.
+#    Descomente ao adotar um.
+# npx prettier --check $(git diff --cached --name-only --diff-filter=ACMR | tr '\n' ' ') 2>/dev/null || {
+#   echo "Formatação: rode  npx prettier --write .  e adicione de novo."
+#   exit 1
+# }
+
+exit 0

@@ -1,0 +1,69 @@
+# Prumo — two services, two volumes, one network.
+#
+#   cp .env.example .env      # then fill PRUMO_KEK and PRUMO_PEPPER
+#   docker compose up -d
+#   open http://localhost:3000
+#
+# Migrations run at boot under an advisory lock, so there is no separate
+# migration step and two replicas cannot race each other.
+
+name: prumo
+
+services:
+  prumo:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://prumo:${POSTGRES_PASSWORD:-prumo}@postgres:5432/prumo
+      PRUMO_KEK: ${PRUMO_KEK:?PRUMO_KEK is required — see .env.example}
+      PRUMO_PEPPER: ${PRUMO_PEPPER:?PRUMO_PEPPER is required — see .env.example}
+      PRUMO_PAPEL: ${PRUMO_PAPEL:-tudo}
+      PRUMO_MODO: ${PRUMO_MODO:-pessoal}
+      PRUMO_URL_PUBLICA: ${PRUMO_URL_PUBLICA:-}
+      PRUMO_ARMAZENAMENTO: ${PRUMO_ARMAZENAMENTO:-disco}
+      PRUMO_DIR_BLOBS: /var/prumo/blobs
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      HOST: 0.0.0.0
+      PORT: '3000'
+    ports:
+      - '${PRUMO_PORTA:-3000}:3000'
+    volumes:
+      - blobs:/var/prumo/blobs
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:3000/saude/vivo').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: prumo
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-prumo}
+      POSTGRES_DB: prumo
+    # Exposed so `npm run dev` and the integration suite can reach it from the
+    # host. On a public machine, bind it to localhost: 127.0.0.1:5432:5432.
+    ports:
+      - '${POSTGRES_PORTA:-5432}:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U prumo -d prumo']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  pgdata:
+  blobs:

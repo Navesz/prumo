@@ -1,0 +1,80 @@
+name-template: 'v$RESOLVED_VERSION'
+tag-template: 'v$RESOLVED_VERSION'
+change-template: '- $TITLE (#$NUMBER) @$AUTHOR'
+change-title-escapes: "\\<*_&"
+
+categories:
+  - title: 'Breaking changes'
+    labels: ['breaking-change']
+  # Anything that changes how money is computed, reserved, or recorded gets its
+  # own section. A pricing change buried under "Fixes" is a change to what
+  # self-hosters are charged, announced as a bug fix.
+  - title: 'Money, price, and ledger'
+    labels: ['area: catalog', 'type: price', 'area: ledger']
+  - title: 'Security and key custody'
+    labels: ['area: security', 'area: vault']
+  # Migrations decide whether an upgrade is reversible. They are read before
+  # the upgrade, not after, so they go near the top.
+  - title: 'Database migrations'
+    labels: ['area: schema', 'migration']
+  - title: 'Providers'
+    labels: ['area: providers']
+  - title: 'Features'
+    labels: ['type: feature', 'enhancement']
+  - title: 'Fixes'
+    labels: ['type: bug', 'bug']
+  - title: 'Documentation'
+    labels: ['area: docs', 'documentation']
+  - title: 'Tooling and CI'
+    labels: ['area: tooling', 'area: ci']
+  - title: 'Maintenance'
+    labels: ['dependencies', 'maintenance', 'type: maintenance']
+
+exclude-labels:
+  - 'skip-changelog'
+
+version-resolver:
+  major:
+    labels: ['major', 'breaking-change']
+  minor:
+    labels: ['minor', 'type: feature', 'enhancement', 'area: schema']
+  patch:
+    labels: ['patch', 'type: bug', 'bug', 'dependencies']
+  default: patch
+
+template: |
+  ## What changed
+
+  $CHANGES
+
+  ## Before upgrading
+
+  **Back up the database and check that `PRUMO_KEK` is stored somewhere other
+  than that backup.** An encrypted database restored next to its key is not
+  encrypted. Losing the KEK is unrecoverable: every stored provider credential
+  becomes ciphertext nobody can open, and each user has to paste their keys
+  again.
+
+  Migrations run at boot under an advisory lock, so starting the new version is
+  what applies them. If this release lists anything under **Database
+  migrations**, read that section before starting the container: a migration
+  with a working `down` is reversible, and the release notes are where it says
+  whether this one is.
+
+  ## What this release does not protect you from
+
+  Prumo custodies third-party paid API keys. They are encrypted at rest with
+  AES-256-GCM under a key held by the server, which protects against a leaked
+  dump, a stolen backup, or a restored replica. It does not protect against a
+  compromised host: whoever runs the instance can read every user's provider
+  key. That is a vault of trust in the operator, not a vault of secrecy, and it
+  is stated on the key-entry screen rather than only here.
+
+  ## Cost
+
+  Prumo takes no margin. Generations are billed by each provider to the key its
+  owner pasted. Every price shown carries its source and collection date, and a
+  price older than 30 days leaves the ranking on its own — a stale catalog does
+  not fail, it lies, which is why the date is a column and not a comment.
+
+  Full comparison: https://github.com/Navesz/prumo/compare/$PREVIOUS_TAG...v$RESOLVED_VERSION

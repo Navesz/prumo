@@ -1,0 +1,32 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+indent_style = space
+indent_size = 2
+trim_trailing_whitespace = true
+
+# Markdown: two trailing spaces are a hard line break. Trimming them changes
+# how the document renders, which is why this is the one place the rule is off.
+[*.md]
+trim_trailing_whitespace = false
+
+# Kept at 2 to match the rest of the repository, but note that the .github/
+# workflows depend on it: a YAML file re-indented with tabs stops parsing, and
+# GitHub reports that as "workflow file issue" without saying where.
+[*.{yml,yaml}]
+indent_size = 2
+
+[*.sql]
+indent_size = 2
+
+[Makefile]
+indent_style = tab
+
+# The vendored tooling keeps upstream formatting so it can be resynchronized
+# with Navesz/alicerce. Nothing here should reformat it.
+[ferramental/**]
+trim_trailing_whitespace = false
+insert_final_newline = false

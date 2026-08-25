@@ -1,0 +1,72 @@
+name: Documentation links
+
+# Two checks with different reliability, so they run on different triggers.
+#
+# Markdown lint is deterministic and offline: it runs on every pull request.
+#
+# The external link check reaches thirteen provider documentation sites, and a
+# third-party outage must never block someone else's merge — so it runs on main,
+# on a weekly schedule, and on demand. It is not only link hygiene: two
+# providers changed or removed their image documentation during the research
+# window for docs/PROVEDORES.md, and a scheduled 404 against a provider's own
+# pricing page is the earliest warning that a route in the catalog no longer
+# exists.
+#
+# Broken *relative* links are caught on every pull request by the `elos` step
+# inside `npm run verificar`, which needs no network at all.
+#
+# No repository secret is used. GITHUB_TOKEN below is the automatic read-only
+# token, passed only so github.com links do not exhaust the anonymous API rate
+# limit.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '**/*.md'
+      - '.github/workflows/links.yml'
+      - '.github/lychee.toml'
+      - '.github/.markdownlint-cli2.jsonc'
+  pull_request:
+  schedule:
+    - cron: '41 6 * * 2'
+  workflow_dispatch:
+
+concurrency:
+  group: links-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  markdown:
+    name: Markdown lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: DavidAnson/markdownlint-cli2-action@v24
+        with:
+          config: .github/.markdownlint-cli2.jsonc
+          globs: '**/*.md'
+
+  links:
+    name: External links
+    # Skipped on pull requests on purpose — see the note at the top of the file.
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: lycheeverse/lychee-action@v2
+        with:
+          args: --config .github/lychee.toml "**/*.md"
+          fail: true
+          token: ${{ secrets.GITHUB_TOKEN }}

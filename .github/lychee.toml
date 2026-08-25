@@ -1,0 +1,53 @@
+# A blank User-Agent is not a neutral default. Together's CDN answers HTTP 403
+# to requests without one — documented, and the reason the Prumo downloader
+# pins a User-Agent too, because that 403 loses an image that was already paid
+# for. Setting it here keeps the link check from reporting a failure that is
+# really a header.
+user_agent = "prumo-link-check/1.0 (+https://github.com/Navesz/prumo)"
+
+exclude = [
+  "^http://localhost",
+  "^http://127\\.0\\.0\\.1",
+  "^https://prumo\\.app",
+
+  # Reserved TLDs used in issue templates and examples. They are supposed to
+  # not resolve — that is what makes them safe to print.
+  "\\.invalid(/|$)",
+  "\\.example(/|$)",
+  "^https?://(api\\.)?acme\\.example",
+
+  # These exist only after the first public release. Excluding them keeps the
+  # check honest instead of permanently red; remove each line when the artifact
+  # it names is real.
+  "^https://navesz\\.github\\.io/prumo/?$",
+  "^https://github\\.com/Navesz/prumo/discussions",
+  "^https://github\\.com/Navesz/prumo/security/advisories/new$",
+  "^https://github\\.com/Navesz/prumo/issues/[0-9]+",
+  "^https://github\\.com/Navesz/prumo/compare/",
+  "^https://github\\.com/Navesz/prumo/releases/tag/",
+]
+
+exclude_path = [
+  "\\.git",
+  "node_modules",
+  "ferramental",
+]
+
+# Provider documentation is the whole point of running this, so nothing under
+# docs/ is excluded by domain. Expect noise: several of the thirteen sit behind
+# bot protection, and a provider that starts answering 403 to everything is a
+# finding worth reading rather than a rule worth adding here.
+
+max_concurrency = 8
+max_retries = 2
+retry_wait_time = 3
+timeout = 20
+
+# 429 is accepted because a rate-limited host says nothing about whether the
+# link is valid. 403 is deliberately NOT accepted: on a provider's pricing page
+# it usually means the page moved behind something, and that is exactly the
+# signal the weekly run exists to produce.
+accept = [200, 204, 206, 429]
+
+exclude_mail = true
+no_progress = true

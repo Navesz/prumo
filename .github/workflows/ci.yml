@@ -1,0 +1,205 @@
+name: CI
+
+# ---------------------------------------------------------------------------
+# MANDATORY CLAUSE FOR A PUBLIC REPOSITORY:
+# a workflow triggered by a fork receives no secret.
+#
+# `pull_request` from a fork runs with a read-only GITHUB_TOKEN and no access
+# to repository secrets. That is GitHub's behavior, and this file is written to
+# depend on it: every value CI needs is a literal here, in the open. Nothing in
+# this workflow reads `secrets.*`.
+#
+# Which means the rule to hold on to is not "be careful with secrets", it is:
+# do not add one. `pull_request_target`, `workflow_run` on a fork PR, and
+# `issue_comment` triggers all run with the base repository's permissions and
+# would hand a stranger's code the ability to read them. A PR from a stranger
+# with access to a secret is exfiltration in one commit — and the secret that
+# matters most here is PRUMO_KEK, which decrypts every stored user API key.
+#
+# The database password and the KEK below are fixed throwaway values for an
+# ephemeral container that exists for the length of one job. They are not
+# secrets, they must never become real ones, and a real one must never be
+# pasted where they are.
+# ---------------------------------------------------------------------------
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  verificar:
+    # The single command that decides whether a change is finished:
+    # instructions, formatting, types, lint, boundaries, secrets, links, tests,
+    # build. M0 budgets it at under 2 minutes — a gate slow enough to skip is
+    # a gate that gets skipped.
+    name: verificar
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: prumo
+          POSTGRES_PASSWORD: prumo # alicerce-segredo-ok: throwaway password for an ephemeral CI container
+          POSTGRES_DB: prumo_test
+        ports:
+          - 5432:5432
+        # Without the healthcheck the job races the container: `npm run
+        # verificar` starts, the first connection is refused, and the failure
+        # reads like a broken migration instead of a container that had not
+        # finished booting.
+        options: >-
+          --health-cmd "pg_isready -U prumo -d prumo_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+          --health-start-period 5s
+
+    env:
+      DATABASE_URL: postgres://prumo:prumo@127.0.0.1:5432/prumo_test # alicerce-segredo-ok: local CI container, not a real credential
+      PRUMO_PAPEL: tudo
+      PRUMO_MODO: pessoal
+      # 32 zero bytes in hex. Deliberately not a plausible key: anything that
+      # looks random invites someone to replace it with a real one "just to
+      # test". Whatever encoding PRUMO_KEK ends up accepting, the boot
+      # validator is the place to fix a mismatch — not this line.
+      PRUMO_KEK: '0000000000000000000000000000000000000000000000000000000000000000' # alicerce-segredo-ok: all-zero test KEK, never a real key
+      TZ: UTC
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # The checkout token is not needed after clone, and leaving it in the
+          # local git config means any script the build runs can read it.
+          persist-credentials: false
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+          cache: npm
+
+      # `npm ci` and not `npm install`: install rewrites the lockfile on a
+      # resolution it dislikes, so CI would then be testing a dependency tree
+      # that exists nowhere else.
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Wait for PostgreSQL
+        run: |
+          for attempt in $(seq 1 30); do
+            if pg_isready -h 127.0.0.1 -p 5432 -U prumo -d prumo_test; then
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "PostgreSQL did not become ready in 30s"
+          exit 1
+
+      - name: verificar
+        run: npm run verificar
+
+      # `--json` reports duration per step. Uploaded so that "the gate got slow"
+      # is a number someone can look at, instead of a feeling that shows up as
+      # people running it less often.
+      - name: Step timings
+        if: always()
+        run: node ferramental/verificar/verificar.mjs --json > verificar.json || true
+
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: verificar-timings-${{ github.run_id }}
+          path: verificar.json
+          retention-days: 7
+          if-no-files-found: ignore
+
+  portao:
+    # The gate that proves the gate. Each case breaks one thing on purpose,
+    # runs the corresponding step, and asserts three things: it passed before,
+    # it failed with the planted error, and it passed again once undone.
+    #
+    # This exists because a check that has never rejected anything is a drawing
+    # of a door. The `dominio-puro` rule in Herz reported "no dependency
+    # violations found" for months with React inside the domain.
+    #
+    # The cases shipped in ferramental/ are the ones from Alicerce upstream.
+    # Prumo's own cases replace them — one per rule worth proving. At minimum:
+    # a provider HTTP client imported from `dominio/`, an `axios` import
+    # anywhere, a spend ceiling rewritten as read-then-check, and a route that
+    # returns a stored credential.
+    name: portao
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Runs after `verificar` because every assertion here starts with "this
+    # passed before the planted error". With a red baseline the output is
+    # noise. A skipped required check still blocks the merge, which is correct:
+    # a broken build is not a merge.
+    needs: verificar
+
+    # The ceiling case needs a real database — the rule being proved is that
+    # zero rows affected by the conditional UPDATE means the ceiling was hit,
+    # and that is only provable against PostgreSQL.
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: prumo
+          POSTGRES_PASSWORD: prumo # alicerce-segredo-ok: throwaway password for an ephemeral CI container
+          POSTGRES_DB: prumo_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U prumo -d prumo_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+          --health-start-period 5s
+
+    env:
+      DATABASE_URL: postgres://prumo:prumo@127.0.0.1:5432/prumo_test # alicerce-segredo-ok: local CI container, not a real credential
+      PRUMO_PAPEL: tudo
+      PRUMO_MODO: pessoal
+      PRUMO_KEK: '0000000000000000000000000000000000000000000000000000000000000000' # alicerce-segredo-ok: all-zero test KEK, never a real key
+      TZ: UTC
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # The `elos` and `segredo` cases stage and unstage their own files,
+      # because both scanners only see tracked files. An unconfigured git
+      # identity is enough for `git add` and `git rm`, but not for anything
+      # that commits — so if a case ever needs a commit, it is the case that is
+      # wrong, not this config.
+      - name: Identify git for the planted cases
+        run: |
+          git config user.name "prumo-ci"
+          git config user.email "ci@prumo.invalid"
+
+      - name: portao
+        run: node ferramental/portao/provar-portao.mjs
+
+      # A planted case that fails halfway leaves a file behind. Printing the
+      # dirty tree turns "the gate is flaky" into a specific path.
+      - name: Working tree after the gate
+        if: failure()
+        run: git status --porcelain

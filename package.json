@@ -1,0 +1,49 @@
+{
+  "name": "prumo",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Bring your own API keys, generate across many image models at once, and see the cost before you spend.",
+  "license": "Apache-2.0",
+  "author": "Prumo contributors",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Navesz/prumo.git"
+  },
+  "homepage": "https://navesz.github.io/prumo",
+  "bugs": "https://github.com/Navesz/prumo/issues",
+  "engines": {
+    "node": ">=24"
+  },
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace @prumo/server",
+    "dev:web": "npm run dev --workspace @prumo/web",
+    "build": "npm run build --workspace @prumo/contract && npm run build --workspace @prumo/web && npm run build --workspace @prumo/server",
+    "instrucoes": "node .ai/gerar.mjs --verificar",
+    "formato": "prettier --check .",
+    "formato:corrigir": "prettier --write .",
+    "tipos": "tsc -b",
+    "lint": "oxlint --deny-warnings",
+    "fronteiras": "depcruise apps packages --config .dependency-cruiser.cjs",
+    "test": "vitest run",
+    "test:observar": "vitest",
+    "migrar": "node --experimental-strip-types apps/server/src/db/migrate.ts",
+    "verificar": "node ferramental/verificar/verificar.mjs",
+    "portao": "node ferramental/portao/provar-portao.mjs",
+    "segredo": "node ferramental/segredo/varrer-segredo.mjs",
+    "backup": "node scripts/backup.mjs",
+    "preparar": "node ferramental/hooks/instalar.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "^24.13.3",
+    "dependency-cruiser": "^18.2.0",
+    "oxlint": "^1.80.0",
+    "prettier": "^3.6.2",
+    "typescript": "~6.0.3",
+    "vitest": "^4.1.11"
+  }
+}

@@ -1,0 +1,147 @@
+name: Bug report
+description: Report a reproducible defect
+title: '[Bug]: '
+labels: ['type: bug', 'needs-triage']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Never paste an API key here
+
+        Not the whole key, not the first characters, not "just to show the
+        format". Issues are public, indexed, and permanent — and the key you
+        hold spends your own money at the provider.
+
+        A key is not redacted by editing the issue afterwards: the original text
+        stays in the edit history and in the notification e-mail that already
+        went out. **If a key has already been pasted anywhere, revoke it at the
+        provider first, then come back.**
+
+        The same goes for request bodies, `curl` lines, HAR files, browser
+        network exports, and full server logs — all four carry the
+        `Authorization`, `x-key`, `x-api-key` or `x-goog-api-key` header.
+        Replace the value with `REDACTED` before pasting.
+
+        Prumo shows only the last 4 digits of a stored key, and there is no
+        route that reveals one. If you found a way to read a full key back out,
+        that is a security report, not a bug: use
+        [private advisory reporting](https://github.com/Navesz/prumo/security/advisories/new).
+  - type: checkboxes
+    id: no-key
+    attributes:
+      label: Before anything else
+      options:
+        - label: There is no API key, `Authorization` header, `x-key`, `x-api-key`, or unredacted request/log in this report.
+          required: true
+  - type: textarea
+    id: summary
+    attributes:
+      label: What happened, and what should have happened
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Reproduction steps
+      placeholder: "1. Add a key for...\n2. Submit a batch with...\n3. Observe..."
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
+      description: Output of `git rev-parse --short HEAD`, or the release tag.
+    validations:
+      required: true
+  - type: dropdown
+    id: provider
+    attributes:
+      label: Provider
+      description: The provider the failing call went to. Choose "Not provider-specific" if no outbound call was involved.
+      options:
+        - Not provider-specific
+        - fal.ai
+        - Replicate
+        - KIE.ai
+        - WaveSpeed
+        - Runware
+        - OpenAI
+        - Google Gemini
+        - BFL / FLUX
+        - Together
+        - Novita
+        - DeepInfra
+        - Segmind
+        - Other / not yet supported
+    validations:
+      required: true
+  - type: input
+    id: model
+    attributes:
+      label: Model
+      description: The exact model slug or endpoint path, as Prumo shows it — `flux-2-pro`, not "FLUX".
+  - type: dropdown
+    id: estado
+    attributes:
+      label: Generation state when it went wrong
+      description: The `geracao.estado` value on screen or in the database. "It failed" is not one of them, and that distinction is the point.
+      options:
+        - No generation involved
+        - na_fila
+        - despachando
+        - gerando
+        - ingerindo
+        - pronto
+        - falhou
+        - moderada
+        - cancelado
+        - duvida_de_cobranca
+        - Unknown / not visible anywhere
+    validations:
+      required: true
+  - type: dropdown
+    id: dinheiro
+    attributes:
+      label: Did money move?
+      description: >-
+        Answer from the provider's own dashboard, not from Prumo's screen — the
+        disagreement between the two is exactly what makes this urgent.
+      options:
+        - No charge at the provider
+        - Charged, and Prumo recorded it
+        - Charged, and Prumo did not record it
+        - Charged twice
+        - Prumo recorded a charge that the provider did not make
+        - Cannot tell — the provider has no billing API (Replicate)
+        - Not checked
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: >-
+        How Prumo is running (docker compose / bare Node), `PRUMO_PAPEL`
+        (`api` / `worker` / `tudo`), Node version, PostgreSQL version, whether a
+        proxy sits in front (SSE dies silently behind a buffering proxy),
+        browser and device if the problem is on screen.
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Diagnostics
+      description: >-
+        Sanitized log lines, the `type` of the Problem Details response, the
+        `erro_tipo` on the generation row, task attempt count. Redact headers
+        before pasting.
+      render: text
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Confirmation
+      options:
+        - label: I checked existing issues first.
+          required: true
+        - label: If this involves reading another user's data, stored credentials, or bypassing the spend ceiling, I am reporting it privately instead of here.
+          required: true
