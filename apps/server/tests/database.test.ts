@@ -57,8 +57,12 @@ beforeAll(async () => {
     return
   }
 
+  // Probe on the ADMIN pool, never the app pool. The app pool runs `SET ROLE
+  // prumo_app` on every connection, and that role is created by migration 0002 —
+  // so touching it first fails with `role "prumo_app" does not exist` before the
+  // migration has had a chance to run. Order is the whole content of this comment.
   try {
-    await sql`SELECT 1`.execute(db)
+    await sql`SELECT 1`.execute(adminDb)
     reachable = true
   } catch {
     // Loud on purpose. A skipped integration suite that says nothing reads as a
