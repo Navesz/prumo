@@ -56,6 +56,26 @@ export const errors = {
     data: z.object({ provider: z.string(), instructionsUrl: z.url().optional() }),
   },
 
+  UNKNOWN_PROVIDER: {
+    status: 404,
+    message: 'There is no provider by that name.',
+    data: z.object({ provider: z.string() }),
+  },
+  PROVIDER_DISABLED: {
+    status: 409,
+    message: 'This provider is switched off in this instance.',
+    data: z.object({ provider: z.string() }),
+  },
+  CREDENTIAL_DUPLICATE: {
+    status: 409,
+    message: 'That key is already stored for this provider.',
+    data: z.object({ provider: z.string() }),
+  },
+  CREDENTIAL_NOT_FOUND: {
+    status: 404,
+    message: 'No such credential.',
+  },
+
   // --- money ------------------------------------------------------------------
 
   BUDGET_MONTH_CAP: {

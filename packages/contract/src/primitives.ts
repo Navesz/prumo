@@ -78,3 +78,73 @@ export const budget = z.object({
 })
 
 export type Budget = z.infer<typeof budget>
+
+// --- M2: providers and the key vault -------------------------------------------
+
+export const providerSlug = z.string().min(1).max(40)
+
+export const providerInfo = z.object({
+  slug: providerSlug,
+  name: z.string(),
+  active: z.boolean(),
+  mode: z.enum(['sync', 'queue', 'both']),
+  /** Whether the provider reports what a generation actually cost. */
+  costInResponse: z.enum(['exact', 'units', 'none']),
+  /** How long the provider's output URL lives. BFL is 600 seconds. */
+  outputTtlSeconds: z.number().int().nullable(),
+  docUrl: z.url().nullable(),
+  /** Compliance facts the user must see BEFORE spending. */
+  notice: z.string().nullable(),
+})
+
+export type ProviderInfo = z.infer<typeof providerInfo>
+
+/**
+ * What a screen may know about a stored key.
+ *
+ * There is no secret in this shape and no route returns one — not even masked
+ * behind a "reveal" button. A read path is what an authorization bug turns into a
+ * mass leak, and an XSS would drain the vault through the user's own session.
+ */
+export const credential = z.object({
+  id: z.uuid(),
+  provider: providerSlug,
+  kind: z.enum(['api_key', 'oauth_refresh', 'webhook_secret']),
+  label: z.string().max(80).nullable(),
+  lastFour: z.string().length(4),
+  status: z.enum(['active', 'invalid', 'revoked']),
+  verifiedAt: timestamp.nullable(),
+  lastUsedAt: timestamp.nullable(),
+  createdAt: timestamp,
+})
+
+export type Credential = z.infer<typeof credential>
+
+/**
+ * `no_probe` is not a failure. Six of the thirteen providers expose no free,
+ * documented endpoint that authenticates, so the key is stored and the screen
+ * says it could not be checked — rather than showing a tick that means nothing.
+ */
+export const verification = z.object({
+  status: z.enum([
+    'valid',
+    'invalid',
+    'no_credit',
+    'unverified_account',
+    'rate_limited',
+    'unavailable',
+    'no_probe',
+  ]),
+  retryAfterSeconds: z.number().int().nonnegative().optional(),
+})
+
+export type Verification = z.infer<typeof verification>
+
+/**
+ * The secret itself, on its way IN and never on its way out.
+ *
+ * Bounded so a megabyte pasted into the box cannot become a megabyte of
+ * ciphertext in a row, and trimmed because a trailing newline from a copy-paste
+ * is the most common reason a perfectly good key is rejected.
+ */
+export const providerSecret = z.string().trim().min(8).max(4096)

@@ -115,6 +115,24 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
  * part of the header it received back inside its own error message, and a prompt
  * is free text written by a person.
  */
+const SENSITIVE_FIELDS = ['apiKey', 'api_key', 'kek', 'pepper', 'password', 'prompt', 'secret']
+
+/**
+ * Every sensitive field, at the root and at two levels of nesting.
+ *
+ * The `*` wildcard in pino matches EXACTLY ONE level. A list of `*.apiKey` alone
+ * therefore protects `err.apiKey` and leaves a root-level `{ apiKey }`
+ * completely in the clear — which is what this configuration did until
+ * `no-secret-in-log.test.ts` logged one and found it.
+ *
+ * Three levels cover the shapes that actually occur here: the root, one wrapper
+ * (`err`, `req`, `body`), and two (`req.body`, `err.response`). Deeper than that
+ * is NOT covered, and the answer is not a longer list — pino has no recursive
+ * wildcard. The real defence is structural: a secret is never put into an object
+ * that gets logged. Redaction is the net under that, not the floor.
+ */
+const atEveryDepth = SENSITIVE_FIELDS.flatMap((field) => [field, `*.${field}`, `*.*.${field}`])
+
 export const REDACT_PATHS = [
   'req.headers.authorization',
   'req.headers.cookie',
@@ -122,11 +140,5 @@ export const REDACT_PATHS = [
   'req.headers["x-key"]',
   'req.headers["x-goog-api-key"]',
   'res.headers["set-cookie"]',
-  '*.apiKey',
-  '*.api_key',
-  '*.kek',
-  '*.pepper',
-  '*.password',
-  '*.prompt',
-  '*.secret',
+  ...atEveryDepth,
 ] as const

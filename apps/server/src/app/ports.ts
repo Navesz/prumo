@@ -144,4 +144,145 @@ export interface Repos {
   readonly sessions: SessionsRepo
   readonly budgets: BudgetsRepo
   readonly commands: CommandsRepo
+  readonly credentials: CredentialsRepo
+}
+
+// --- M2: the key vault ---------------------------------------------------------
+
+export type CredentialKind = 'api_key' | 'oauth_refresh' | 'webhook_secret'
+export type CredentialStatus = 'active' | 'invalid' | 'revoked'
+export type KekProvider = 'env' | 'awskms' | 'gcpkms'
+
+/**
+ * The identity a credential is sealed AGAINST, recalculated from the row and
+ * never stored. Moving a row to another user makes decryption fail.
+ */
+export interface AadParts {
+  readonly id: string
+  readonly userId: string
+  readonly provider: string
+  readonly kind: CredentialKind
+}
+
+export interface SealedSecret {
+  readonly kekId: string
+  readonly algorithm: 'AES-256-GCM'
+  readonly wrappedDek: Buffer
+  readonly dekNonce: Buffer
+  readonly secretCiphertext: Buffer
+  readonly secretNonce: Buffer
+  readonly aadVersion: number
+}
+
+/**
+ * A port, like every other. The use case never learns whether the key-encryption
+ * key came from an environment variable or from a KMS — which is what makes
+ * moving to a KMS a configuration change instead of a migration.
+ */
+export interface Vault {
+  readonly kekId: string
+  readonly provider: KekProvider
+  seal(secret: string, parts: AadParts): SealedSecret
+  open(sealed: SealedSecret, parts: AadParts): string
+  fingerprint(secret: string): Buffer
+  lastFour(secret: string): string
+}
+
+/**
+ * What a screen is allowed to know about a stored key.
+ *
+ * There is no secret here and there is no route that returns one. A read path is
+ * exactly what an authorization bug turns into a mass leak, and an XSS in the
+ * front end would drain the vault through the user's own session.
+ */
+export interface CredentialSummary {
+  readonly id: string
+  readonly provider: string
+  readonly kind: CredentialKind
+  readonly label: string | null
+  readonly lastFour: string
+  readonly status: CredentialStatus
+  readonly verifiedAt: Date | null
+  readonly lastUsedAt: Date | null
+  readonly createdAt: Date
+}
+
+export interface StoredCredential extends CredentialSummary {
+  readonly userId: string
+  readonly sealed: SealedSecret
+}
+
+export interface ProviderInfo {
+  readonly slug: string
+  readonly name: string
+  readonly active: boolean
+  readonly mode: 'sync' | 'queue' | 'both'
+  readonly costInResponse: 'exact' | 'units' | 'none'
+  readonly outputTtlSeconds: number | null
+  readonly docUrl: string | null
+  /** Compliance facts the user must see BEFORE spending. */
+  readonly notice: string | null
+}
+
+export type CredentialAction =
+  'created' | 'verified' | 'used' | 'auth_failed' | 'rewrapped' | 'revoked' | 'deleted'
+
+export interface CredentialsRepo {
+  listProviders(): Promise<ProviderInfo[]>
+  findProvider(slug: string): Promise<ProviderInfo | null>
+
+  listForUser(userId: string): Promise<CredentialSummary[]>
+  /** The only path that returns sealed bytes, and it is reachable from the worker alone. */
+  findActive(userId: string, provider: string): Promise<StoredCredential | null>
+  findById(userId: string, id: string): Promise<StoredCredential | null>
+
+  insert(input: {
+    id: string
+    userId: string
+    provider: string
+    kind: CredentialKind
+    label: string | null
+    kekProvider: KekProvider
+    sealed: SealedSecret
+    fingerprint: Buffer
+    lastFour: string
+  }): Promise<CredentialSummary>
+
+  markVerified(id: string, at: Date): Promise<void>
+  /** Three consecutive auth failures mark the credential invalid and stop burning attempts. */
+  recordAuthFailure(id: string): Promise<number>
+  revoke(id: string, at: Date): Promise<void>
+
+  /** The audit trail. `detail` is FORBIDDEN to contain a secret, and CI greps for it. */
+  recordEvent(input: {
+    credentialId: string | null
+    userId: string
+    provider: string
+    action: CredentialAction
+    detail?: Record<string, unknown>
+    ipHash: Buffer | null
+  }): Promise<void>
+}
+
+/**
+ * The outcome of a cheap "does this key work?" call.
+ *
+ * `no_probe` is deliberate and honest: six of the thirteen providers expose no
+ * documented, free, GET-able endpoint that authenticates, so the key is stored,
+ * `verified_at` stays null, and the screen says it could not be checked rather
+ * than implying it was. A green tick that means nothing is worse than no tick.
+ */
+export type VerifyOutcome =
+  | { readonly status: 'valid' }
+  | { readonly status: 'invalid' }
+  | { readonly status: 'no_credit' }
+  /** A VALID key the provider refuses until identity verification completes. */
+  | { readonly status: 'unverified_account' }
+  | { readonly status: 'rate_limited'; readonly retryAfterSeconds?: number }
+  | { readonly status: 'unavailable' }
+  | { readonly status: 'no_probe' }
+
+export interface CredentialVerifier {
+  /** Never returns, throws or logs anything derived from the secret. */
+  verify(input: { provider: string; secret: string }): Promise<VerifyOutcome>
 }

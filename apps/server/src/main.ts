@@ -1,11 +1,14 @@
 import { sql } from 'kysely'
 import { createAuth } from './app/auth.js'
 import { createBudgets } from './app/budgets.js'
+import { createCredentials } from './app/credentials.js'
 import { ConfigError, loadConfig } from './config.js'
 import { APP_ROLE, createDb, createPool } from './db/connection.js'
 import { migrateToLatest } from './db/migrate.js'
 import { createUnitOfWork } from './db/unit-of-work.js'
 import { createServer } from './http/server.js'
+import { createHttpVerifier } from './providers/verify.js'
+import { createEnvVault } from './vault/index.js'
 import {
   createIds,
   createPasswordHasher,
@@ -69,6 +72,16 @@ async function main(): Promise<void> {
 
   const budgets = createBudgets({ uow, clock, ids })
 
+  // The KEK lives here and nowhere else. It is read once, at boot, from a config
+  // object that never logs it, and it does not leave this closure.
+  const credentials = createCredentials({
+    uow,
+    clock,
+    ids,
+    vault: createEnvVault({ kek: config.kek, pepper: config.pepper }),
+    verifier: createHttpVerifier(),
+  })
+
   const checkDatabase = async (): Promise<boolean> => {
     try {
       await sql`SELECT 1`.execute(db)
@@ -102,6 +115,7 @@ async function main(): Promise<void> {
     config,
     auth,
     budgets,
+    credentials,
     checkDatabase,
     hashClientHint: (value) => keyedHash(config.pepper, value),
   })
