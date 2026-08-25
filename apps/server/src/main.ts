@@ -1,6 +1,7 @@
 import { sql } from 'kysely'
 import { createAuth } from './app/auth.js'
 import { createBudgets } from './app/budgets.js'
+import { createCatalog } from './app/catalog.js'
 import { createCredentials } from './app/credentials.js'
 import { ConfigError, loadConfig } from './config.js'
 import { APP_ROLE, createDb, createPool } from './db/connection.js'
@@ -82,6 +83,8 @@ async function main(): Promise<void> {
     verifier: createHttpVerifier(),
   })
 
+  const catalog = createCatalog({ uow, clock })
+
   const checkDatabase = async (): Promise<boolean> => {
     try {
       await sql`SELECT 1`.execute(db)
@@ -116,6 +119,7 @@ async function main(): Promise<void> {
     auth,
     budgets,
     credentials,
+    catalog,
     checkDatabase,
     hashClientHint: (value) => keyedHash(config.pepper, value),
   })

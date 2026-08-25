@@ -36,7 +36,8 @@
     "portao": "node ferramental/portao/provar-portao.mjs",
     "segredo": "node ferramental/segredo/varrer-segredo.mjs",
     "backup": "node scripts/backup.mjs",
-    "preparar": "node ferramental/hooks/instalar.mjs"
+    "preparar": "node ferramental/hooks/instalar.mjs",
+    "coletar": "node scripts/coletar.mjs"
   },
   "devDependencies": {
     "@types/node": "^24.13.3",

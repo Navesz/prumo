@@ -20,6 +20,15 @@ export type Scope =
    * a test prove no third one does. It is deliberately noisy to write.
    */
   | { readonly kind: 'bootstrap'; readonly reason: 'register' | 'sign-in' }
+  /**
+   * Reading data nobody owns: the provider catalogue and the price index.
+   *
+   * Sets neither `app.user_id` nor the bypass flag, so if one of these queries
+   * ever touches a table that DOES have row level security, it returns nothing
+   * rather than everything. The failure mode of a mistake here is an empty page,
+   * not a leak.
+   */
+  | { readonly kind: 'public' }
 
 export interface UnitOfWork {
   run<T>(scope: Scope, fn: (repos: Repos) => Promise<T>): Promise<T>

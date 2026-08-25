@@ -10,6 +10,7 @@ import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import type { Auth } from '../app/auth.js'
 import type { Budgets } from '../app/budgets.js'
+import type { Catalog } from '../app/catalog.js'
 import type { Credentials } from '../app/credentials.js'
 import { REDACT_PATHS, type Config } from '../config.js'
 import { router, type RouterContext } from './router.js'
@@ -19,6 +20,7 @@ export interface ServerDeps {
   readonly auth: Auth
   readonly budgets: Budgets
   readonly credentials: Credentials
+  readonly catalog: Catalog
   readonly checkDatabase: () => Promise<boolean>
   readonly hashClientHint: (value: string) => Buffer
 }
@@ -77,6 +79,7 @@ export async function createServer(deps: ServerDeps): Promise<FastifyInstance> {
       auth: deps.auth,
       budgets: deps.budgets,
       credentials: deps.credentials,
+      catalog: deps.catalog,
       role: config.role,
       secureCookies: config.nodeEnv === 'production',
       checkDatabase: deps.checkDatabase,

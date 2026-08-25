@@ -9,6 +9,7 @@ import {
   email,
   passwordSchema,
   providerInfo,
+  indexEntry,
   providerSecret,
   providerSlug,
   publicUser,
@@ -166,8 +167,39 @@ const credentials = {
     .output(z.object({ revoked: z.literal(true), alsoRevokedAtProvider: z.literal(false) })),
 }
 
+/**
+ * The price index. NO authentication, on purpose.
+ *
+ * Handing a service an API key is a decision, and nobody should have to make it
+ * before seeing a single price. This is also the surface an agent reads, and the
+ * reason a stranger has to contribute a price correction at all.
+ */
+const catalog = {
+  index: oc
+    .route({ method: 'GET', path: '/catalog' })
+    .input(
+      z.object({
+        // What the comparison is made against. Everything is normalised to one
+        // image at this size, and the formula that produced the number travels
+        // with it.
+        width: z.coerce.number().int().min(64).max(8192).default(1024),
+        height: z.coerce.number().int().min(64).max(8192).default(1024),
+        steps: z.coerce.number().int().min(1).max(200).default(25),
+      }),
+    )
+    .output(
+      z.object({
+        target: z.object({ width: z.number(), height: z.number(), steps: z.number() }),
+        entries: z.array(indexEntry),
+        /** Named, not hidden: ten of the fourteen publish nothing machine-readable. */
+        providersWithoutMachineReadablePrices: z.array(providerSlug),
+      }),
+    ),
+}
+
 export const contract = {
   health,
+  catalog,
   auth,
   budget: budgets,
   credential: credentials,

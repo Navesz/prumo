@@ -3,6 +3,7 @@ import { contract, type PublicUser } from '@prumo/contract'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import type { Auth } from '../app/auth.js'
 import type { Budgets } from '../app/budgets.js'
+import type { Catalog } from '../app/catalog.js'
 import type { Credentials } from '../app/credentials.js'
 import { AppError } from '../app/errors.js'
 import type {
@@ -22,6 +23,7 @@ export interface RouterContext {
   readonly auth: Auth
   readonly budgets: Budgets
   readonly credentials: Credentials
+  readonly catalog: Catalog
   readonly role: 'api' | 'worker' | 'tudo'
   readonly secureCookies: boolean
   readonly checkDatabase: () => Promise<boolean>
@@ -84,6 +86,55 @@ const ready = os.health.ready.handler(async ({ context }) => {
     database,
     migration: latestMigrationName(),
     role: context.role,
+  }
+})
+
+// --- the price index, open to anybody ------------------------------------------
+
+/**
+ * No `authenticated` middleware, deliberately. Handing a service an API key is a
+ * decision, and nobody should have to make it before seeing a single price.
+ */
+const catalogIndex = os.catalog.index.handler(async ({ input, context }) => {
+  const entries = await context.catalog.index({
+    width: input.width,
+    height: input.height,
+    steps: input.steps,
+  })
+
+  return {
+    target: { width: input.width, height: input.height, steps: input.steps },
+    entries: entries.map((entry) => ({
+      modelId: entry.modelId,
+      provider: entry.provider,
+      providerName: entry.providerName,
+      name: entry.name,
+      family: entry.family,
+      tasks: [...entry.tasks],
+      watermark: entry.watermark,
+      costNanoUsd: entry.costNano === null ? null : formatNano(entry.costNano),
+      explanation: entry.explanation,
+      basis: entry.basis,
+      source: entry.source,
+      collectedAt: entry.collectedAt ? entry.collectedAt.toISOString() : null,
+      method: entry.method,
+      fresh: entry.fresh,
+      note: entry.note,
+    })),
+    // Named rather than hidden. A list that shows only what is easy to collect
+    // reads as "these are all the prices there are".
+    providersWithoutMachineReadablePrices: [
+      'replicate',
+      'runware',
+      'bfl',
+      'openai',
+      'google',
+      'kie',
+      'wavespeed',
+      'together',
+      'novita',
+      'segmind',
+    ],
   }
 })
 
@@ -305,6 +356,7 @@ const revokeCredential = os.credential.revoke
 
 export const router = os.router({
   health: { live, ready },
+  catalog: { index: catalogIndex },
   auth: { register, signIn, signOut, me },
   budget: { list: listBudgets, setCap },
   credential: {
