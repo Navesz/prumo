@@ -2,7 +2,7 @@ import { sql } from 'kysely'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { createBudgets } from '../src/app/budgets.js'
 import type { UserRecord } from '../src/app/ports.js'
-import { createDb, createPool } from '../src/db/connection.js'
+import { APP_ROLE, createDb, createPool } from '../src/db/connection.js'
 import { migrateToLatest } from '../src/db/migrate.js'
 import { createUnitOfWork } from '../src/db/unit-of-work.js'
 import { createIds } from '../src/security/identity.js'
@@ -25,7 +25,18 @@ const url = process.env.DATABASE_URL_TEST ?? process.env.DATABASE_URL ?? ''
 
 let reachable = false
 
-const pool = createPool({ connectionString: url, applicationName: 'prumo-test', max: 5 })
+// Same split as production: the admin pool owns the schema, the app pool runs as
+// the restricted role. Testing through a superuser connection would have proved
+// that the policies parse, not that they hold.
+const adminPool = createPool({ connectionString: url, applicationName: 'prumo-test-admin', max: 2 })
+const adminDb = createDb(adminPool)
+
+const pool = createPool({
+  connectionString: url,
+  applicationName: 'prumo-test',
+  max: 5,
+  role: APP_ROLE,
+})
 const db = createDb(pool)
 const uow = createUnitOfWork(db)
 const ids = createIds()
@@ -59,14 +70,15 @@ beforeAll(async () => {
     return
   }
 
-  await migrateToLatest(db)
+  await migrateToLatest(adminDb)
   await sql`TRUNCATE users, sessions, budgets, processed_commands RESTART IDENTITY CASCADE`.execute(
-    db,
+    adminDb,
   )
 })
 
 afterAll(async () => {
   await pool.end().catch(() => undefined)
+  await adminPool.end().catch(() => undefined)
 })
 
 const run = (name: string, fn: () => Promise<void>) =>
@@ -136,6 +148,29 @@ describe('the database, for real', () => {
     expect(everything.length).toBeGreaterThan(0)
     expect(everything.every((row) => row.user_id === bob.id)).toBe(true)
     expect(everything.some((row) => row.user_id === alice.id)).toBe(false)
+  })
+
+  run('runs as a role that CANNOT bypass row level security', async () => {
+    // The assertion that would have caught the first CI failure directly.
+    // PostgreSQL: a superuser, and any role with BYPASSRLS, always bypasses row
+    // security — FORCE ROW LEVEL SECURITY does not change that. So enabling RLS
+    // means nothing until you also prove what role you are.
+    const who = await sql<{
+      current_user: string
+      is_superuser: boolean
+      bypassrls: boolean
+    }>`
+      SELECT current_user,
+             rolsuper    AS is_superuser,
+             rolbypassrls AS bypassrls
+        FROM pg_roles
+       WHERE rolname = current_user
+    `.execute(db)
+
+    const role = who.rows[0]
+    expect(role?.current_user).toBe(APP_ROLE)
+    expect(role?.is_superuser, 'the runtime role must not be a superuser').toBe(false)
+    expect(role?.bypassrls, 'the runtime role must not have BYPASSRLS').toBe(false)
   })
 
   run('forces row level security even for the table owner', async () => {

@@ -1,6 +1,7 @@
 import { sql, type Kysely } from 'kysely'
 import { Migrator, type Migration, type MigrationProvider } from 'kysely/migration'
 import * as base from './migrations/20260824_0001_base.js'
+import * as appRole from './migrations/20260825_0002_app_role.js'
 import type { Database } from './schema.js'
 
 /**
@@ -21,6 +22,7 @@ import type { Database } from './schema.js'
 /** Kysely orders lexicographically. The timestamp prefix is what keeps that honest. */
 const migrations: Record<string, Migration> = {
   '20260824_0001_base': base,
+  '20260825_0002_app_role': appRole,
 }
 
 class StaticMigrationProvider implements MigrationProvider {

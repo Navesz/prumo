@@ -10,6 +10,13 @@ import type { Database } from './schema.js'
  * nothing in the ledger, or recorded with nothing charged.
  */
 
+/**
+ * The restricted role every runtime connection drops into. Created by migration
+ * 0002. Nothing outside the migration pool should ever talk to Postgres as
+ * anything else.
+ */
+export const APP_ROLE = 'prumo_app'
+
 let installed = false
 
 /**
@@ -30,12 +37,25 @@ export interface PoolOptions {
   readonly connectionString: string
   readonly max?: number
   readonly applicationName?: string
+  /**
+   * Role to drop into on every connection.
+   *
+   * This is not hardening around the edges — it is what makes row level security
+   * work at all. PostgreSQL documents that a superuser, and any role with
+   * BYPASSRLS, ALWAYS bypasses row security; `FORCE ROW LEVEL SECURITY` closes
+   * the table-owner hole and not that one. The default compose sets
+   * `POSTGRES_USER: prumo`, which IS the cluster superuser, so without this every
+   * policy in the database is decoration and one user can read another's rows.
+   *
+   * Leave it undefined for the migration pool, which needs to be the owner.
+   */
+  readonly role?: string
 }
 
 export function createPool(options: PoolOptions): pg.Pool {
   installTypeParsers()
 
-  return new pg.Pool({
+  const pool = new pg.Pool({
     connectionString: options.connectionString,
     max: options.max ?? 10,
     application_name: options.applicationName ?? 'prumo',
@@ -44,6 +64,24 @@ export function createPool(options: PoolOptions): pg.Pool {
     connectionTimeoutMillis: 10_000,
     idleTimeoutMillis: 30_000,
   })
+
+  if (options.role !== undefined) {
+    const role = options.role
+    pool.on('connect', (client) => {
+      // Fire-and-forget is wrong here: a connection that failed to drop its
+      // privileges must not serve a query. `pg` queues queries behind this one on
+      // the same client, and an error here surfaces on the pool's error handler.
+      void client.query(`SET ROLE ${quoteIdentifier(role)}`)
+    })
+  }
+
+  return pool
+}
+
+/** The role name is ours, not user input — but building SQL by concatenation is
+ *  a habit, and habits leak into places where the value is not ours. */
+function quoteIdentifier(name: string): string {
+  return `"${name.replaceAll('"', '""')}"`
 }
 
 export function createDb(pool: pg.Pool): Kysely<Database> {
