@@ -85,9 +85,18 @@ afterAll(async () => {
   await adminPool.end().catch(() => undefined)
 })
 
+/*
+ * Sem Postgres, o teste é PULADO — nunca aprovado.
+ *
+ * `return` cedo faz o vitest reportar "passed" para um corpo que não asseriu
+ * nada: quem roda sem banco vê a suíte inteira verde e acredita que a camada de
+ * dados foi verificada. É a mesma doença que a config do lychee e o
+ * dependency-review tinham — um passo que parece guardar algo e não guarda.
+ * `ctx.skip()` marca a linha como pulada, e a contagem final denuncia.
+ */
 const run = (name: string, fn: () => Promise<void>) =>
-  it(name, async () => {
-    if (!reachable) return
+  it(name, async (ctx) => {
+    if (!reachable) ctx.skip(`sem Postgres em DATABASE_URL_TEST — este teste não rodou`)
     await fn()
   })
 

@@ -24,6 +24,17 @@ export interface AddedCredential {
   readonly verification: VerifyOutcome
 }
 
+/**
+ * `23505` é `unique_violation` no PostgreSQL, e é o único erro que significa
+ * "essa chave já está aí". Comparar pelo código do driver, e não pela mensagem,
+ * porque a mensagem muda com o idioma do servidor (`lc_messages`).
+ */
+function isUniqueViolation(cause: unknown): boolean {
+  return (
+    typeof cause === 'object' && cause !== null && (cause as { code?: unknown }).code === '23505'
+  )
+}
+
 const fail = {
   unknownProvider: (slug: string) =>
     new AppError('UNKNOWN_PROVIDER', `No provider named ${slug}`, { provider: slug }),
@@ -95,8 +106,29 @@ export function createCredentials(deps: CredentialDeps) {
     const lastFour = vault.lastFour(secret)
 
     const credential = await uow.run({ kind: 'user', userId: user.id }, async (repos) => {
+      /*
+       * O mesmo comando duas vezes é a MESMA resposta, não um erro.
+       *
+       * Isto respondia CREDENTIAL_DUPLICATE, que afirma um fato errado sobre a
+       * chave da pessoa: um clique duplo ou um cliente que reenviou depois de um
+       * timeout ouvia "você já adicionou essa chave" e parava de tentar. É a
+       * mesma decisão que `auth.ts` já tomava para o registro.
+       *
+       * Reverificar não é efeito colateral — é leitura, não cobrança —, então o
+       * caminho de verificação lá embaixo roda normalmente.
+       */
       const replay = await repos.commands.find(input.commandId)
-      if (replay) throw fail.duplicate(provider.slug)
+      if (replay) {
+        const jaCriada = (replay.result as { credentialId?: string } | null)?.credentialId
+        const existente = jaCriada
+          ? (await repos.credentials.listForUser(user.id)).find((c) => c.id === jaCriada)
+          : undefined
+
+        if (existente) return existente
+        // O comando rodou e a credencial que ele criou não está mais aqui —
+        // revogada, provavelmente. Repetir o insert violaria a chave do comando.
+        throw fail.notFound()
+      }
 
       let created: CredentialSummary
       try {
@@ -115,6 +147,14 @@ export function createCredentials(deps: CredentialDeps) {
         // The partial unique index on (user_id, provider, fingerprint) is what
         // actually decides, not a prior SELECT. Two simultaneous submissions of
         // the same key resolve here rather than racing.
+        //
+        // ONLY 23505. This used to catch everything and call it a duplicate, so a
+        // serialization failure, a dropped connection or a constraint nobody
+        // expected all reached the user as "you already added this key" — and
+        // somebody who believes that does not retry, so the key is never stored.
+        // It also hid the real cause from CI, which reported a duplicate for a
+        // fresh user and a fresh key on a fresh database.
+        if (!isUniqueViolation(cause)) throw cause
         throw new AppError('CREDENTIAL_DUPLICATE', undefined, { provider: provider.slug, cause })
       }
 
@@ -140,8 +180,19 @@ export function createCredentials(deps: CredentialDeps) {
     })
 
     // Outside the transaction, on purpose.
+    //
+    // `credential.id`, nunca o `id` gerado acima: num replay a transação devolve a
+    // credencial que JÁ existia, com outro id, e anotar o id novo escreveria a
+    // verificação numa linha que não existe — em silêncio, porque um UPDATE que
+    // não acha nada não é erro.
     const verification = await verifier.verify({ provider: provider.slug, secret })
-    const annotated = await applyVerification(user, id, provider.slug, verification, input.ipHash)
+    const annotated = await applyVerification(
+      user,
+      credential.id,
+      provider.slug,
+      verification,
+      input.ipHash,
+    )
 
     return { credential: annotated ?? credential, verification }
   }
