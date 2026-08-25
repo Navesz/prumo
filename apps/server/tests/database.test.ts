@@ -141,17 +141,25 @@ describe('the database, for real', () => {
     const aliceSees = await budgets.list(alice)
     expect(aliceSees.every((budget) => budget.userId === alice.id)).toBe(true)
 
-    // And the direct attempt: inside Bob's scope, ask for every budget row there
-    // is. Row level security must answer with Bob's rows only, even though the
-    // query has no WHERE clause of its own.
-    const everything = await uow.run({ kind: 'user', userId: bob.id }, async () => {
-      const rows = await sql<{ user_id: string }>`SELECT user_id FROM budgets`.execute(db)
-      return rows.rows
-    })
+    // Now the attack: inside BOB's scope, ask the repository for ALICE's budgets.
+    // This is a repository written wrong, or a tampered parameter, or an id that
+    // leaked through a route — the shapes a real isolation bug takes. The first
+    // door (the WHERE clause) is being handed the wrong value on purpose, so only
+    // the second door can save us.
+    const now = clock.now()
 
-    expect(everything.length).toBeGreaterThan(0)
-    expect(everything.every((row) => row.user_id === bob.id)).toBe(true)
-    expect(everything.some((row) => row.user_id === alice.id)).toBe(false)
+    const leaked = await uow.run({ kind: 'user', userId: bob.id }, (repos) =>
+      repos.budgets.listForUser(alice.id, now),
+    )
+    expect(leaked, "Bob asked for Alice's budgets and got rows").toHaveLength(0)
+
+    // And the control: the same call, in the same scope, for Bob's own rows. If
+    // this were also empty, the test above would pass for the wrong reason.
+    const own = await uow.run({ kind: 'user', userId: bob.id }, (repos) =>
+      repos.budgets.listForUser(bob.id, now),
+    )
+    expect(own.length).toBeGreaterThan(0)
+    expect(own.every((budget) => budget.userId === bob.id)).toBe(true)
   })
 
   run('runs as a role that CANNOT bypass row level security', async () => {
