@@ -6,20 +6,21 @@ Every record here predates the product. Prumo is at M0/M1 — the verification g
 
 ## Index
 
-| #                                                    | Title                                                                         | Status   | Date       |
-| ---------------------------------------------------- | ----------------------------------------------------------------------------- | -------- | ---------- |
-| [0001](0001-english-as-repository-language.md)       | English as the repository language                                            | Accepted | 2026-08-24 |
-| [0002](0002-vendor-alicerce-tooling.md)              | Vendor the Alicerce tooling instead of depending on it                        | Accepted | 2026-08-24 |
-| [0003](0003-money-as-integer-nano-usd.md)            | Money as integer nano-USD                                                     | Accepted | 2026-08-24 |
-| [0004](0004-server-side-key-vault.md)                | The key vault lives on the server                                             | Accepted | 2026-08-24 |
-| [0005](0005-postgres-over-sql-server.md)             | PostgreSQL 17, not SQL Server, and no SQLite path                             | Accepted | 2026-08-24 |
-| [0006](0006-single-process-topology.md)              | One process serving HTTP, worker and SSE                                      | Accepted | 2026-08-24 |
-| [0007](0007-budget-invariant-in-the-where-clause.md) | The spending cap lives in the WHERE clause, and the composite CHECK is banned | Accepted | 2026-08-24 |
-| [0008](0008-task-lease-per-type.md)                  | Lease per task type — revoking the 60-second rule                             | Accepted | 2026-08-24 |
-| [0009](0009-earliest-deadline-first-queue.md)        | The queue orders by output expiry, not by arrival                             | Accepted | 2026-08-24 |
-| [0010](0010-assumed-scale-and-retention.md)          | Assumed scale, and the gallery keeps the bytes forever                        | Accepted | 2026-08-24 |
-| [0011](0011-orpc-instead-of-ts-rest.md)              | oRPC instead of ts-rest                                                       | Accepted | 2026-08-24 |
-| [0012](0012-day-cap-not-session-cap.md)              | A day cap, not a session cap                                                  | Accepted | 2026-08-24 |
+| #                                                     | Title                                                                         | Status   | Date       |
+| ----------------------------------------------------- | ----------------------------------------------------------------------------- | -------- | ---------- |
+| [0001](0001-english-as-repository-language.md)        | English as the repository language                                            | Accepted | 2026-08-24 |
+| [0002](0002-vendor-alicerce-tooling.md)               | Vendor the Alicerce tooling instead of depending on it                        | Accepted | 2026-08-24 |
+| [0003](0003-money-as-integer-nano-usd.md)             | Money as integer nano-USD                                                     | Accepted | 2026-08-24 |
+| [0004](0004-server-side-key-vault.md)                 | The key vault lives on the server                                             | Accepted | 2026-08-24 |
+| [0005](0005-postgres-over-sql-server.md)              | PostgreSQL 17, not SQL Server, and no SQLite path                             | Accepted | 2026-08-24 |
+| [0006](0006-single-process-topology.md)               | One process serving HTTP, worker and SSE                                      | Accepted | 2026-08-24 |
+| [0007](0007-budget-invariant-in-the-where-clause.md)  | The spending cap lives in the WHERE clause, and the composite CHECK is banned | Accepted | 2026-08-24 |
+| [0008](0008-task-lease-per-type.md)                   | Lease per task type — revoking the 60-second rule                             | Accepted | 2026-08-24 |
+| [0009](0009-earliest-deadline-first-queue.md)         | The queue orders by output expiry, not by arrival                             | Accepted | 2026-08-24 |
+| [0010](0010-assumed-scale-and-retention.md)           | Assumed scale, and the gallery keeps the bytes forever                        | Accepted | 2026-08-24 |
+| [0011](0011-orpc-instead-of-ts-rest.md)               | oRPC instead of ts-rest                                                       | Accepted | 2026-08-24 |
+| [0012](0012-day-cap-not-session-cap.md)               | A day cap, not a session cap                                                  | Accepted | 2026-08-24 |
+| [0013](0013-application-runs-as-a-restricted-role.md) | The application runs as a role that cannot bypass RLS                         | Accepted | 2026-08-25 |
 
 ## Format
 
