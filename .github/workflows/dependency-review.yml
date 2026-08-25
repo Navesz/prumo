@@ -37,8 +37,12 @@ jobs:
       - uses: actions/dependency-review-action@v5
         with:
           fail-on-severity: high
-          # Direct or transitive, in any version.
-          deny-packages: axios
+          # Direct or transitive, in any version. It has to be a package-URL:
+          # written as a bare `axios` the action fails parsing its own input
+          # ("package-url must start with pkg:") and dies before reviewing a
+          # single dependency — a red step that checked nothing, which is the
+          # same failure the lychee config had.
+          deny-packages: pkg:npm/axios
           # Copyleft licenses are denied on the code side: Prumo ships under
           # Apache-2.0 and a self-hoster must be able to run it without
           # inheriting a distribution obligation they did not choose. The price
