@@ -1,3 +1,4 @@
+import { identifyModel } from '../domain/model-identity.js'
 import { costPerImage, isFresh, REFERENCE_TARGET, type Target } from '../domain/pricing.js'
 import type { CatalogRow } from './ports.js'
 import type { UnitOfWork } from './unit-of-work.js'
@@ -9,6 +10,10 @@ export interface CatalogDeps {
 
 export interface IndexEntry {
   readonly modelId: string
+  readonly modelKey: string
+  readonly modelLabel: string
+  readonly maker: string | null
+  readonly matchedBy: 'known-family' | 'unresolved'
   readonly provider: string
   readonly providerName: string
   readonly name: string
@@ -61,9 +66,17 @@ export function createCatalog(deps: CatalogDeps) {
 }
 
 function toEntry(row: CatalogRow, target: Target, now: Date): IndexEntry {
+  // The endpoint id matters as much as the display name: fal titles a model
+  // "V4.0q [fast]", which identifies nothing on its own.
+  const identity = identifyModel(row.name, row.modelId)
+
   if (!row.price) {
     return {
       modelId: row.modelId,
+      modelKey: identity.key,
+      modelLabel: identity.label,
+      maker: identity.maker,
+      matchedBy: identity.matchedBy,
       provider: row.provider,
       providerName: row.providerName,
       name: row.name,
@@ -93,6 +106,10 @@ function toEntry(row: CatalogRow, target: Target, now: Date): IndexEntry {
 
   return {
     modelId: row.modelId,
+    modelKey: identity.key,
+    modelLabel: identity.label,
+    maker: identity.maker,
+    matchedBy: identity.matchedBy,
     provider: row.provider,
     providerName: row.providerName,
     name: row.name,

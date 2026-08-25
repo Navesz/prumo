@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { api, formatUsd, newCommandId } from './api.js'
 import { Credentials } from './credentials.js'
-import { PriceIndex } from './index-de-precos.js'
+import { Indice } from './indice.js'
 
 /**
  * The shape of the product, in the order a person actually needs it.
@@ -58,7 +58,7 @@ export function App() {
         </header>
 
         {screen === 'index' ? (
-          <PriceIndex />
+          <Indice />
         ) : user ? (
           <Settings user={user} />
         ) : (
@@ -100,7 +100,7 @@ function Settings({ user }: { user: { email: string; role: string; timezone: str
           </div>
           <button
             onClick={() => signOut.mutate()}
-            className="rounded border border-(--color-line) px-3 py-1.5 text-sm"
+            className="min-h-10 rounded-lg border border-(--color-edge) px-3 text-sm"
           >
             Sair
           </button>
@@ -194,7 +194,7 @@ function SignedOut({ registrationOpen }: { registrationOpen: boolean }) {
             required
             value={email}
             onChange={(event) => setEmail(event.target.value)}
-            className="w-full rounded border border-(--color-line) bg-(--color-ground) px-3 py-2 text-sm"
+            className="w-full rounded-lg border border-(--color-edge) bg-(--color-ground) px-3 py-2.5 text-sm"
           />
         </label>
 
@@ -207,7 +207,7 @@ function SignedOut({ registrationOpen }: { registrationOpen: boolean }) {
             minLength={12}
             value={password}
             onChange={(event) => setPassword(event.target.value)}
-            className="w-full rounded border border-(--color-line) bg-(--color-ground) px-3 py-2 text-sm"
+            className="w-full rounded-lg border border-(--color-edge) bg-(--color-ground) px-3 py-2.5 text-sm"
           />
           <span className="text-xs text-(--color-ink-muted)">Mínimo de 12 caracteres.</span>
         </label>
@@ -277,12 +277,12 @@ function BudgetRow({
           aria-label={`Novo teto em dólares para ${budget.period === 'month' ? 'o mês' : 'o dia'}`}
           value={draft}
           onChange={(event) => setDraft(event.target.value)}
-          className="w-24 rounded border border-(--color-line) bg-(--color-ground) px-2 py-1 text-right font-mono text-sm tabular-nums"
+          className="w-24 min-h-10 rounded-lg border border-(--color-edge) bg-(--color-ground) px-2 text-right font-mono text-sm tabular-nums"
         />
         <button
           type="submit"
           disabled={save.isPending}
-          className="rounded border border-(--color-line) px-3 py-1 text-sm disabled:opacity-60"
+          className="min-h-10 rounded-lg border border-(--color-edge) px-3 text-sm disabled:opacity-60"
         >
           Salvar
         </button>
@@ -303,11 +303,14 @@ function Tab({
   return (
     <button
       onClick={onClick}
-      aria-pressed={active}
+      aria-current={active ? 'page' : undefined}
       className={
+        // Estado por COR SOZINHA a 1,42:1 não identifica nada (WCAG 1.4.11 pede
+        // 3:1). A aba ativa ganha peso, cor de tinta cheia e uma régua de latão
+        // embaixo — três canais, nenhum deles só matiz.
         active
-          ? 'rounded bg-(--color-line) px-3 py-1.5'
-          : 'rounded px-3 py-1.5 text-(--color-ink-muted)'
+          ? 'min-h-10 rounded-lg border-b-2 border-(--color-brass) px-3 font-medium text-(--color-ink)'
+          : 'min-h-10 rounded-lg border-b-2 border-transparent px-3 text-(--color-ink-muted) hover:text-(--color-ink)'
       }
     >
       {children}

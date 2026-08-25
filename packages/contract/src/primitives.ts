@@ -159,6 +159,19 @@ export const providerSecret = z.string().trim().min(8).max(4096)
  */
 export const indexEntry = z.object({
   modelId: z.string(),
+  /**
+   * Identidade do modelo atravessando provedores.
+   *
+   * `FLUX.1 [schnell]` no fal e `black-forest-labs/FLUX-1-schnell` na DeepInfra
+   * sao os mesmos pesos, e sem esta chave a tela nao consegue mostrar a unica
+   * coisa que o produto existe para mostrar: o mesmo modelo custando precos
+   * diferentes. `matchedBy: 'unresolved'` e resposta legitima — o modelo fica com
+   * a linha dele, que nunca esta errado.
+   */
+  modelKey: z.string(),
+  modelLabel: z.string(),
+  maker: z.string().nullable(),
+  matchedBy: z.enum(['known-family', 'unresolved']),
   provider: providerSlug,
   providerName: z.string(),
   name: z.string(),

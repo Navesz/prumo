@@ -99,6 +99,24 @@ const casos = [
     },
   },
   {
+    passo: 'controle',
+    descricao: 'regex com \\b que virou o caractere BACKSPACE',
+    caminho: 'apps/server/src/domain/_prova-portao-controle.ts',
+    quebrar() {
+      // O defeito exatamente como ele aconteceu: o `\b` de fronteira de palavra
+      // perdeu uma camada de escape a caminho do arquivo e chegou como U+0008. A
+      // regex segue válida, compila, passa no lint — e nunca mais casa com nada.
+      const backspace = String.fromCharCode(8)
+      writeFileSync(
+        join(RAIZ, this.caminho),
+        'export const variante = /klein.*4b' + backspace + '/i' + LF,
+      )
+    },
+    desfazer() {
+      unlinkSync(join(RAIZ, this.caminho))
+    },
+  },
+  {
     passo: 'elos',
     descricao: 'link relativo para arquivo inexistente',
     caminho: 'docs/_prova-portao.md',

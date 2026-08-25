@@ -106,6 +106,10 @@ const catalogIndex = os.catalog.index.handler(async ({ input, context }) => {
     target: { width: input.width, height: input.height, steps: input.steps },
     entries: entries.map((entry) => ({
       modelId: entry.modelId,
+      modelKey: entry.modelKey,
+      modelLabel: entry.modelLabel,
+      maker: entry.maker,
+      matchedBy: entry.matchedBy,
       provider: entry.provider,
       providerName: entry.providerName,
       name: entry.name,

@@ -128,7 +128,7 @@ function AddKey({ providers }: { providers: Provider[] }) {
             setSlug(event.target.value)
             setResult(null)
           }}
-          className="w-full rounded border border-(--color-line) bg-(--color-ground) px-3 py-2 text-sm"
+          className="w-full rounded border border-(--color-edge) bg-(--color-ground) px-3 py-2.5 text-sm"
         >
           <option value="">Escolha…</option>
           {providers.map((provider) => (
@@ -160,7 +160,7 @@ function AddKey({ providers }: { providers: Provider[] }) {
           value={secret}
           onChange={(event) => setSecret(event.target.value)}
           placeholder="cole aqui"
-          className="w-full rounded border border-(--color-line) bg-(--color-ground) px-3 py-2 font-mono text-sm"
+          className="w-full rounded border border-(--color-edge) bg-(--color-ground) px-3 py-2.5 font-mono text-sm"
         />
         <span className="text-xs text-(--color-ink-muted)">
           Ela é guardada cifrada e nunca volta para a tela — nem mascarada. Depois de salvar, só os
@@ -174,7 +174,7 @@ function AddKey({ providers }: { providers: Provider[] }) {
           value={label}
           onChange={(event) => setLabel(event.target.value)}
           maxLength={80}
-          className="w-full rounded border border-(--color-line) bg-(--color-ground) px-3 py-2 text-sm"
+          className="w-full rounded border border-(--color-edge) bg-(--color-ground) px-3 py-2.5 text-sm"
         />
       </label>
 
@@ -278,14 +278,14 @@ function StoredKey({ credential, notice }: { credential: Credential; notice: str
           <button
             onClick={() => verify.mutate()}
             disabled={verify.isPending}
-            className="rounded border border-(--color-line) px-3 py-1 text-sm disabled:opacity-60"
+            className="min-h-10 rounded-lg border border-(--color-edge) px-3 text-sm disabled:opacity-60"
           >
             {verify.isPending ? 'Conferindo…' : 'Conferir'}
           </button>
           <button
             onClick={() => (confirming ? revoke.mutate() : setConfirming(true))}
             disabled={revoke.isPending}
-            className="rounded border border-(--color-line) px-3 py-1 text-sm text-(--color-state-failed) disabled:opacity-60"
+            className="min-h-10 rounded-lg border border-(--color-edge) px-3 text-sm text-(--color-state-failed) disabled:opacity-60"
           >
             {confirming ? 'Confirmar remoção' : 'Remover'}
           </button>
