@@ -2,7 +2,7 @@ import { sql } from 'kysely'
 import { createAuth } from './app/auth.js'
 import { createBudgets } from './app/budgets.js'
 import { ConfigError, loadConfig } from './config.js'
-import { createDb, createPool } from './db/connection.js'
+import { APP_ROLE, createDb, createPool } from './db/connection.js'
 import { migrateToLatest } from './db/migrate.js'
 import { createUnitOfWork } from './db/unit-of-work.js'
 import { createServer } from './http/server.js'
@@ -23,16 +23,35 @@ import {
 async function main(): Promise<void> {
   const config = loadConfig()
 
-  const pool = createPool({ connectionString: config.databaseUrl, applicationName: 'prumo' })
-  const db = createDb(pool)
-
+  // Two pools, and the split is a security boundary rather than tidiness.
+  //
+  // Migrations need the owner: CREATE TABLE, CREATE EXTENSION, CREATE ROLE. The
+  // application must NOT run as the owner, because in the default deployment the
+  // owner is the cluster superuser, and a superuser ALWAYS bypasses row level
+  // security no matter how many policies are FORCED. So the admin pool opens,
+  // migrates, and closes before the app pool exists.
+  //
   // Migrations run here, before anything can serve a request against a schema
   // that is not there yet. Under an advisory lock, so two replicas starting in
   // the same second do not race each other.
-  const migration = await migrateToLatest(db)
+  const adminPool = createPool({
+    connectionString: config.databaseUrl,
+    applicationName: 'prumo-migrate',
+    max: 2,
+  })
+
+  const migration = await migrateToLatest(createDb(adminPool))
   if (migration.applied.length > 0) {
     process.stdout.write(`applied migrations: ${migration.applied.join(', ')}\n`)
   }
+  await adminPool.end()
+
+  const pool = createPool({
+    connectionString: config.databaseUrl,
+    applicationName: 'prumo',
+    role: APP_ROLE,
+  })
+  const db = createDb(pool)
 
   const uow = createUnitOfWork(db)
   const clock = { now: () => new Date() }
