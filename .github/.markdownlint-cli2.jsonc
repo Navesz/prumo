@@ -1,0 +1,57 @@
+{
+  // Rules are disabled here only where the rule is wrong for these documents,
+  // each with the reason. A rule turned off "because it was noisy" is a rule
+  // nobody can turn back on later, because by then the noise is the content.
+  "config": {
+    "default": true,
+
+    // MD013 line length. The Portuguese documents are hard-wrapped near 80 and
+    // the tables are not — a wrapped table row is unreadable in the source and
+    // renders identically, so the limit would only ever fire on tables.
+    "MD013": false,
+
+    // MD024 duplicate headings. docs/PROVEDORES.md repeats the same subsection
+    // titles under each of the thirteen providers on purpose: the parallel
+    // structure is what makes two providers comparable at a glance.
+    "MD024": { "siblings_only": true },
+
+    // MD033 inline HTML. Needed for <details> blocks and for <br> inside table
+    // cells, which is the only way to put two lines in a cell.
+    "MD033": false,
+
+    // MD041 first line must be a top-level heading. Several documents open
+    // with a blockquote epigraph before the title.
+    "MD041": false,
+
+    // MD012 multiple blank lines. Blank lines around the --- separators are
+    // load-bearing for readability in the long documents.
+    "MD012": false,
+
+    // MD040 fenced code language. Architecture diagrams and terminal
+    // transcripts have no language, and tagging them `text` makes the
+    // highlighter treat prose as code.
+    "MD040": false,
+
+    // MD060 table column count stays ENABLED, and it currently fails.
+    //
+    // docs/PROVEDORES.md lines 68, 118 and 168 contain an unescaped `|` inside
+    // a cell — in a JSON example such as {type:'text'}|{type:'image'} — which
+    // silently splits one cell into three. The table still renders; it renders
+    // wrong, with the provider's endpoint spilling into columns that do not
+    // exist. That is the failure mode this project treats as the worst one:
+    // no error, no log, nothing red, and a document that now says something
+    // different from what it meant.
+    //
+    // The fix is to escape those pipes as \| . Do not silence the rule.
+    "MD060": true,
+  },
+  "ignores": [
+    // Vendored from the private Navesz/alicerce repository under its original
+    // names so it can be resynchronized. Reformatting it to satisfy a linter
+    // here turns the next upstream sync into a conflict nobody reads.
+    "ferramental/**",
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/.venv/**",
+  ],
+}

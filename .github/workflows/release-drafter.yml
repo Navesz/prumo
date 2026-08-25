@@ -1,0 +1,37 @@
+name: Release drafter
+
+# Keeps one draft release up to date from merged PR titles and labels. It never
+# publishes: a human writes the upgrade notes and presses the button, because
+# the notes that matter here are the ones about migrations and about the KEK,
+# and a bot cannot know whether this release needs a rewrap.
+#
+# `push` to main only. This never runs on a pull request, so a fork PR cannot
+# reach the token below — which is the automatic GITHUB_TOKEN, scoped by the
+# permissions block, not a repository secret.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: release-drafter
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  update-draft:
+    name: Update draft release
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write # Create and update one draft release.
+      pull-requests: read # Read merged PR titles and labels to build the notes.
+    steps:
+      - uses: release-drafter/release-drafter@v7
+        with:
+          config-name: release-drafter.yml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

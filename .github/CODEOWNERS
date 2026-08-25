@@ -1,0 +1,91 @@
+# CODEOWNERS names a responsible reviewer. It does not require anything on its
+# own: branch protection decides whether the review is mandatory. A CODEOWNERS
+# file with protection turned off is a comment.
+#
+# Last match wins, so the specific paths below override the catch-all.
+#
+# The extra lines are not there because those paths change more often. They are
+# there because a mistake in them is not a defect that a user reports — it is
+# somebody else's paid API key, somebody else's money, or a price that routes
+# every generation to the wrong provider while looking correct on screen.
+
+*                                   @Navesz
+
+# ---------------------------------------------------------------------------
+# Vendored tooling
+# ---------------------------------------------------------------------------
+
+# Vendored from the private Navesz/alicerce repository and deliberately kept
+# under its original Portuguese names so it can be resynchronized with
+# upstream. Renaming a file here does not break the build — it breaks the next
+# sync, silently, by turning an update into a conflict nobody reads.
+# Edit only to add Prumo-specific cases; upstream fixes go upstream.
+/ferramental/                       @Navesz
+
+# The checks that decide whether a change is finished, and the gate that proves
+# those checks still fail on purpose. A change here can make everything else
+# pass for the wrong reason, which is worse than a red build: the Herz
+# `dominio-puro` rule reported "no dependency violations found" for months with
+# React inside the domain.
+/ferramental/verificar/             @Navesz
+/ferramental/fronteiras/            @Navesz
+/ferramental/portao/                @Navesz
+/ferramental/segredo/               @Navesz
+
+# ---------------------------------------------------------------------------
+# Price data — wrong numbers do not crash, they lie
+# ---------------------------------------------------------------------------
+
+# Every row carries `fonte`, `coletado_em` and `metodo`, and drops out of the
+# ranking after 30 days. A number changed without its source is not a smaller
+# problem than a number changed wrongly — both make the router pick a route
+# with confidence and the ledger report a spend that never happened.
+/packages/catalog/                  @Navesz
+/packages/catalog/data/             @Navesz
+
+# ---------------------------------------------------------------------------
+# Key custody — Prumo holds third-party paid credentials
+# ---------------------------------------------------------------------------
+
+# Envelope encryption (AES-256-GCM, one DEK per credential, KEK in PRUMO_KEK),
+# AAD recomputed and never stored, rewrap. There is no route that reveals a
+# key, not even masked: a diff that adds one is the finding, not the feature.
+#
+# The layer directory naming is not settled yet — PLANO.md §4 draws the server
+# layers in Portuguese (`cofre/`, `provedores/`), the language rule puts code in
+# English. Both spellings are claimed here so that whichever one lands, and any
+# rename between them, cannot silently drop ownership of the vault.
+/packages/api/src/cofre/            @Navesz
+/packages/api/src/vault/            @Navesz
+/packages/api/src/provedores/       @Navesz
+/packages/api/src/providers/        @Navesz
+
+# Outbound destinations are a closed list in code on purpose: there is no
+# `base_url` column, because the server makes authenticated calls with the
+# user's key and any endpoint coming from editable data is a credential
+# exfiltration route.
+/packages/api/src/http/saida/       @Navesz
+/packages/api/src/http/outbound/    @Navesz
+
+# Migrations write the shape the money lives in. `lancamento` is append-only
+# with UPDATE and DELETE revoked in the GRANT; a migration that hands those
+# back is a permission change disguised as SQL.
+/packages/api/migrations/           @Navesz
+/packages/api/src/db/               @Navesz
+
+# ---------------------------------------------------------------------------
+# Documents that are promises, and the config that can leak
+# ---------------------------------------------------------------------------
+
+# SECURITY.md states, in the open, that whoever hosts Prumo can read every
+# user's paid key. Softening that sentence is a change of what the project
+# claims, not a wording fix.
+/SECURITY.md                        @Navesz
+/docs/PROVEDORES.md                 @Navesz
+/docs/ESQUEMA.md                    @Navesz
+/PLANO.md                           @Navesz
+
+# A workflow edit is the cheapest way to exfiltrate whatever the repository
+# can reach. Review these as credential changes, not as CI tweaks.
+/.github/                           @Navesz
+/.github/workflows/                 @Navesz

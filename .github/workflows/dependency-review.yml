@@ -1,0 +1,50 @@
+name: Dependency review
+
+# Reads the dependency diff of a pull request. This is where the transitive
+# `axios` ban is enforced: dependency-cruiser only sees imports that exist in
+# the source, so a package that pulls axios in three levels down is invisible
+# to it and visible here.
+#
+# Why that ban is not a style preference: an axios error object carries
+# `config.headers`. One `console.error(err)` in a rarely-taken branch writes a
+# user's provider API key into the log, and Prumo holds keys that spend other
+# people's money.
+#
+# No repository secret is used.
+
+on:
+  pull_request:
+
+concurrency:
+  group: dependency-review-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  review:
+    name: Review dependency changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: actions/dependency-review-action@v5
+        with:
+          fail-on-severity: high
+          # Direct or transitive, in any version.
+          deny-packages: axios
+          # Copyleft licenses are denied on the code side: Prumo ships under
+          # Apache-2.0 and a self-hoster must be able to run it without
+          # inheriting a distribution obligation they did not choose. The price
+          # catalog is CC BY 4.0 and is data, not a dependency — this list does
+          # not apply to it.
+          deny-licenses: AGPL-3.0, AGPL-3.0-only, AGPL-3.0-or-later, GPL-3.0, GPL-3.0-only, GPL-3.0-or-later, SSPL-1.0
+          # A comment on the PR needs write permission on pull-requests, which
+          # a fork PR does not get. The check result is the signal.
+          comment-summary-in-pr: never

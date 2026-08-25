@@ -1,0 +1,94 @@
+name: Feature proposal
+description: Propose a scoped change to the product, the pricing model, or the architecture
+title: '[Feature]: '
+labels: ['type: feature', 'needs-triage']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Prumo is at M0/M1: the foundation and the empty vertical skeleton. The
+        studio is M3, fan-out is M4, the live price index is M6. A proposal that
+        depends on a milestone that has not landed is still worth filing — say
+        so, and it gets parked instead of rejected.
+
+        The milestone table is in [PLANO.md](../../PLANO.md) (Portuguese).
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: >-
+        Describe what someone cannot do today and what it costs them. A proposal
+        that starts at the solution hides the requirement that would have
+        changed the design.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+      description: What the user does, what they see, and what the system does in response.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered, and why they lose
+  - type: dropdown
+    id: milestone
+    attributes:
+      label: Which part does this touch?
+      options:
+        - Vault / credentials (M2)
+        - Studio — single generation, money closing (M3)
+        - Fan-out, queue, slots (M4)
+        - Gallery and mobile (M5)
+        - Price index and catalog (M6)
+        - img2img / inpaint / upscale (M7)
+        - Curation, presets, collections (M8)
+        - Deployment, self-hosting, operations
+        - Tooling, CI, contributor experience
+        - Not sure
+    validations:
+      required: true
+  - type: textarea
+    id: dinheiro
+    attributes:
+      label: Effect on money, price, or the spend ceiling
+      description: >-
+        Does this create, estimate, reserve, settle, or display a cost? Money is
+        `bigint` nano-USD, the ceiling is enforced by a conditional `UPDATE`, and
+        the ledger records `origem` (`exato` / `derivado` / `estimado`). If the
+        answer is "none", write "none" — it is a real answer and it shortens the
+        review. Anything else needs an ADR before code.
+    validations:
+      required: true
+  - type: textarea
+    id: chaves
+    attributes:
+      label: Effect on stored credentials
+      description: >-
+        Does this read, write, move, re-encrypt, or transmit a user's provider
+        key? Does it add an outbound destination? Destinations are a closed list
+        in code on purpose — there is no `base_url` column, because an endpoint
+        coming from editable data is a credential exfiltration route.
+    validations:
+      required: true
+  - type: textarea
+    id: validation
+    attributes:
+      label: How would we know it is correct?
+      description: >-
+        The test, the fixture, or the measurement. For anything about
+        concurrency, rate limits, or latency: what would be measured, against
+        what. Almost everything in this architecture is decided but unmeasured
+        (🧪) and treating 🧪 as ✅ is the mistake the notation exists to prevent.
+    validations:
+      required: true
+  - type: textarea
+    id: compat
+    attributes:
+      label: Compatibility, schema, dependency, and license impact
+      description: >-
+        New tables or columns, new npm dependency (with its license), changes to
+        the ts-rest contract, anything that changes a stored shape. `axios` is
+        banned project-wide, direct or transitive.

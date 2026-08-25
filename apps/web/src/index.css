@@ -1,0 +1,77 @@
+@import 'tailwindcss';
+
+/**
+ * Without this line `dark:` simply does not work in Tailwind 4. It is the single
+ * most expensive missing line in a v3-to-v4 migration, because everything still
+ * compiles and the dark theme just never applies.
+ */
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+  /*
+   * Zinc base with the extremes pulled apart. In a grid of generated images, pure
+   * black makes a photo look cut out of the page and pure white gives a headlight
+   * effect around it. Dark is the default: a gallery of images is looked at in the
+   * dark.
+   */
+  --color-ground: oklch(0.185 0.005 258);
+  --color-surface: oklch(0.225 0.006 258);
+  --color-line: oklch(0.31 0.008 258);
+  --color-ink: oklch(0.94 0.004 258);
+  --color-ink-muted: oklch(0.68 0.008 258);
+  --color-brass: oklch(0.78 0.11 82);
+
+  /* Semantic state colours. Every state also carries an icon or a word: colour
+     alone never communicates state — around 8% of men have some colour vision
+     deficiency, and "failed" versus "ready" on an image card would otherwise be
+     distinguishable only by hue. */
+  --color-state-queued: oklch(0.72 0.03 258);
+  --color-state-running: oklch(0.75 0.13 240);
+  --color-state-ready: oklch(0.76 0.14 155);
+  --color-state-failed: oklch(0.7 0.16 25);
+  --color-state-capped: oklch(0.78 0.13 75);
+  --color-state-doubtful: oklch(0.74 0.12 320);
+}
+
+@layer base {
+  html {
+    color-scheme: dark;
+    background: var(--color-ground);
+  }
+
+  body {
+    background: var(--color-ground);
+    color: var(--color-ink);
+    font-family:
+      ui-sans-serif,
+      system-ui,
+      -apple-system,
+      'Segoe UI',
+      sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /*
+   * Tailwind 4 removed `cursor: pointer` from preflight and shadcn does not put it
+   * back, so nothing clickable changes the cursor until somebody notices. These
+   * are the affordances, restored once, centrally.
+   */
+  button:not(:disabled),
+  [role='button']:not(:disabled),
+  a[href],
+  summary,
+  label[for],
+  select:not(:disabled) {
+    cursor: pointer;
+  }
+
+  button:disabled,
+  [role='button'][aria-disabled='true'] {
+    cursor: not-allowed;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-brass);
+    outline-offset: 2px;
+  }
+}

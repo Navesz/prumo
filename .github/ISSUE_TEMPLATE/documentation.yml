@@ -1,0 +1,71 @@
+name: Documentation problem
+description: Report documentation that is missing, unclear, wrong, or out of date
+title: '[Docs]: '
+labels: ['area: docs', 'needs-triage']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Documentation that describes the code incorrectly is worse than no
+        documentation: a person — or an AI agent reading `.ai/` — follows the
+        description and writes against reality, confidently.
+
+        Language split, so a "wrong language" report is not a bug: code, API,
+        commits, issues and documentation are in **English**. `PLANO.md`,
+        `docs/ESQUEMA.md`, `docs/PROVEDORES.md`, `README.pt-BR.md` and `.ai/`
+        are in **Portuguese**. `ferramental/` keeps upstream Portuguese names so
+        it can be resynchronized with its source repository.
+  - type: input
+    id: location
+    attributes:
+      label: File and heading
+      description: Path plus section, or a permalink to the exact lines.
+      placeholder: 'docs/ESQUEMA.md — 09 · geracao'
+    validations:
+      required: true
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What kind of problem
+      options:
+        - Says something the code does not do
+        - Describes a feature that does not exist yet as if it worked
+        - Missing — the task cannot be completed from the docs
+        - Unclear or ambiguous
+        - A number or claim with no source
+        - Broken link or bad cross-reference
+        - Portuguese and English versions disagree
+        - Out of date after a code change
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What it says, and what is actually true
+      description: >-
+        Quote the sentence. If the correction is a fact about the code, point at
+        the file and line that proves it. If it is a fact about a provider,
+        give the documentation URL and the date you read it.
+    validations:
+      required: true
+  - type: textarea
+    id: audience
+    attributes:
+      label: Who was blocked, and on what
+      description: >-
+        Self-hosting, contributing, adding a provider, understanding a price, or
+        an AI agent following `.ai/`. The audience decides where the fix goes.
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Suggested wording
+      description: A replacement paragraph is more useful than a description of one.
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Confirmation
+      options:
+        - label: This report contains no API key and no unredacted log or request.
+          required: true
+        - label: I checked that the document is not deliberately describing a milestone that has not shipped. Prumo is at M0/M1 and the plan says so in the open.
+          required: true

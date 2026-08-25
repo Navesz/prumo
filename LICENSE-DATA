@@ -1,0 +1,103 @@
+Creative Commons Attribution 4.0 International — for the Prumo catalogue only
+============================================================================
+
+Prumo carries two licenses because it holds two different things: software, and
+a collection of prices that was gathered by hand from public documentation.
+
+WHAT THIS FILE COVERS
+
+  packages/catalog/data/**    the catalogue source: providers, models, endpoints,
+                              price formulas, and the fonte / coletado_em / metodo
+                              stamp on every row
+  catalog.json                the published build of that catalogue
+  docs/PROVIDERS.md           the provider survey the catalogue is derived from,
+  docs/PROVEDORES.md          in English and in Portuguese
+
+WHAT THIS FILE DOES NOT COVER
+
+  Every line of code in this repository — server, worker, web client, migrations,
+  provider adapters, the vendored ferramental/, and the code inside
+  packages/catalog that reads, validates and evaluates the catalogue — is under
+  the Apache License 2.0, in LICENSE. That includes source files that happen to
+  contain tables as literals: the boundary is the path, not the content. A file
+  under packages/catalog/data/ is data; a file under packages/catalog/src/ is
+  code, even when it is nothing but numbers.
+
+  This file also does not cover anything a third party owns. See THIRD_PARTY.md.
+
+THE LICENSE
+
+  Creative Commons Attribution 4.0 International (SPDX: CC-BY-4.0).
+
+  Legal code, canonical and operative:
+      https://creativecommons.org/licenses/by/4.0/legalcode
+  Human-readable deed:
+      https://creativecommons.org/licenses/by/4.0/
+
+  Why a link and not a pasted copy: a license text retyped into a repository can
+  drift from the canonical one, and the drifted copy is then the terms this
+  project is actually offering — a change nobody reviews and no test catches.
+  Creative Commons asks that the license text not be modified and that works be
+  licensed by reference to the URI, so the URI is what this project points at.
+
+SUMMARY, WHICH IS NOT THE LICENSE
+
+  You may copy, redistribute, remix and build on the catalogue, for any purpose
+  including commercial, as long as you credit the source, link to the license,
+  and state whether you changed anything. You may not add legal terms or
+  technical measures that stop anyone else from doing the same. The material is
+  offered as-is, with no warranty. The link above governs; this paragraph does
+  not.
+
+HOW TO ATTRIBUTE
+
+  Minimum credit, wherever the data or a database derived from it is published:
+
+      Price and model data from Prumo (https://github.com/Navesz/prumo),
+      licensed CC BY 4.0. Modified: yes / no.
+
+  Two further requests, which are how this dataset stays honest rather than
+  extra legal conditions:
+
+  1. Keep the per-row stamp. Every price row carries fonte (the URL it was read
+     from), coletado_em (the date it was read) and metodo (doc, medido, or
+     estimado). A price stripped of its date is folklore again — that stamp is
+     the entire difference between this catalogue and a README table, and it is
+     why rows older than 30 days drop out of Prumo's ranking on their own.
+
+  2. Mark your edits at the row level, not only in a footer. An unmarked change
+     makes the original source appear to assert a price it never asserted, and
+     the provider is the one who gets blamed for it.
+
+  Attribution must not suggest that Prumo, its contributors, or any provider
+  endorses you or your use.
+
+WHAT THIS LICENSE CANNOT GRANT
+
+  A published price is a fact, and facts are not owned in most jurisdictions.
+  What is licensed here is the compilation: the selection, the arrangement, the
+  encoding of each provider's billing rule as a discriminated formula, the
+  survey prose, and — where such a right exists, as in the EU — the sui generis
+  database right, which CC BY 4.0 licenses explicitly. Where no right exists in
+  a fact, none is being claimed over it.
+
+  Provider names, model names, endpoint identifiers and logos belong to their
+  owners. Nothing here is a trademark license, and listing a provider is not a
+  claim of any relationship with it.
+
+  The providers' own documentation remains theirs. This catalogue records
+  numbers read from it and links back to the page; it does not republish it.
+
+  Accuracy is not warranted, and this matters more here than in most datasets:
+  as of 2026-08-24 every row is documentation reading, not measurement, and
+  nothing has been confirmed against a real invoice. Before any number here is
+  used to spend money, check it against the provider.
+
+CORRECTION AND REMOVAL
+
+  A provider who wants a row corrected or removed does not need to argue about
+  copyright first. Open an issue at https://github.com/Navesz/prumo/issues using
+  the price-correction template, or write to leonardonavesworking@gmail.com,
+  identifying the rows. Rows are corrected or pulled from the published
+  catalogue first and discussed after — a wrong price in a tool that routes
+  money is worse for the provider than a missing one.
