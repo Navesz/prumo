@@ -39,7 +39,7 @@
     "preparar": "node ferramental/hooks/instalar.mjs"
   },
   "devDependencies": {
-    "@types/node": "^24.13.3",
+    "@types/node": "^26.2.0",
     "dependency-cruiser": "^18.2.0",
     "oxlint": "^1.80.0",
     "prettier": "^3.6.2",
