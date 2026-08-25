@@ -188,10 +188,15 @@ come from.
 
 A provider — or anyone — who finds a wrong price, a stale row, or content they
 want removed: open an issue at <https://github.com/Navesz/prumo/issues> with the
-price-correction template, or write to `the maintainer via GitHub`.
-Identify the rows. They are corrected or pulled from the published catalogue
-first and discussed afterwards, because a wrong price inside a tool that routes
-spending damages the provider more than a missing one does.
+price-correction template, identifying the rows. For a request that should not be
+public, use the
+[private reporting form](https://github.com/Navesz/prumo/security/advisories/new)
+and begin the summary with `[Catalogue]` — a draft advisory is readable only by
+you and the maintainer.
+
+Rows are corrected or pulled from the published catalogue first and discussed
+afterwards, because a wrong price inside a tool that routes spending damages the
+provider more than a missing one does.
 
 ## Papers, prior art, and generated text
 

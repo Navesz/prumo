@@ -97,7 +97,11 @@ CORRECTION AND REMOVAL
 
   A provider who wants a row corrected or removed does not need to argue about
   copyright first. Open an issue at https://github.com/Navesz/prumo/issues using
-  the price-correction template, or write to the maintainer via GitHub,
-  identifying the rows. Rows are corrected or pulled from the published
-  catalogue first and discussed after — a wrong price in a tool that routes
-  money is worse for the provider than a missing one.
+  the price-correction template, identifying the rows. For a request that should
+  not be public, use the private reporting form at
+  https://github.com/Navesz/prumo/security/advisories/new and begin the summary
+  with [Catalogue]; a draft advisory is readable only by you and the maintainer.
+
+  Rows are corrected or pulled from the published catalogue first and discussed
+  after — a wrong price in a tool that routes money is worse for the provider
+  than a missing one.

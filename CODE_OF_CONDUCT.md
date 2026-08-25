@@ -59,9 +59,11 @@ representative at an online or offline event.
 ## Enforcement
 
 Instances of abusive, harassing, or otherwise unacceptable behavior may be
-reported to the community leaders responsible for enforcement at
-**<the maintainer via GitHub>**.
-All complaints will be reviewed and investigated promptly and fairly.
+reported to the community leaders responsible for enforcement through the
+repository's
+**[private reporting form](https://github.com/Navesz/prumo/security/advisories/new)**,
+which is visible only to the reporter and the maintainer and is not a public
+issue. All complaints will be reviewed and investigated promptly and fairly.
 
 All community leaders are obligated to respect the privacy and security of the
 reporter of any incident.
@@ -137,12 +139,22 @@ For answers to common questions about this code of conduct, see the FAQ at
 
 These notes are Prumo's, not part of the Contributor Covenant text above.
 
-**Do not put a conduct report in a public issue.** Email
-<the maintainer via GitHub>. If your report concerns the maintainer who reads
-that mailbox, use the repository's
-[private vulnerability-reporting form](https://github.com/Navesz/prumo/security/advisories/new)
-and begin the summary with `[Conduct]`. That form is a private transport for the
+**Do not put a conduct report in a public issue.** Use the repository's
+[private reporting form](https://github.com/Navesz/prumo/security/advisories/new)
+and begin the summary with `[Conduct]`. A draft advisory is readable only by the
+person who opened it and the maintainer; the form is a private transport for the
 report, not a claim that the behavior is a software vulnerability.
+
+**If your report is about the maintainer, that form is the wrong door** — it
+opens onto the person you would be reporting. Use
+[GitHub's abuse report](https://github.com/contact/report-abuse) instead: it
+reaches GitHub Support, who are not part of this project and cannot be overruled
+by it.
+
+This project publishes no email address, and that is deliberate rather than an
+omission. A mailbox on a public page is a mailbox that gets scraped, and the one
+that used to be printed here belonged to an account the maintainer does not use
+for this work.
 
 Prumo is currently a single-maintainer project. A maintainer named in a report
 recuses themselves when another maintainer is available; while none is, the
