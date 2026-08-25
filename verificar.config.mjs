@@ -26,6 +26,12 @@ export default [
     extrair: /^\[warn\]/,
   },
   {
+    nome: 'controle',
+    comando: 'node ferramental/controle/varrer-controle.mjs',
+    dica: 'An invisible control character reached a source file — usually a `\\b` that lost an escape layer and became U+0008. The code still compiles, the regex stays valid, and it silently never matches again. Retype the line by hand; do not copy it.',
+    extrair: /^error /,
+  },
+  {
     nome: 'segredo',
     comando: 'node ferramental/segredo/varrer-segredo.mjs',
     dica: "A secret is not fixed by a new commit — it has to be ROTATED at the provider first. This repository is about custody of other people's paid API keys; a leak here is somebody else's money.",

@@ -1,5 +1,21 @@
 @import 'tailwindcss';
 
+/*
+ * Self-hosted, not Google Fonts. A stylesheet fetched from a third party on every
+ * page load is a request this project does not need to make on somebody else's
+ * behalf, and a self-hosted instance behind a firewall would silently fall back
+ * to system-ui.
+ *
+ * IBM Plex, not Inter. Inter is the default answer for any dashboard and would
+ * make this look like every other one; Plex was drawn for engineering
+ * documentation, its mono has real tabular figures, and the pairing carries the
+ * instrument metaphor the project is named after. The variable weight of the sans
+ * costs one file for the whole range.
+ */
+@import '@fontsource-variable/ibm-plex-sans';
+@import '@fontsource/ibm-plex-mono/400.css';
+@import '@fontsource/ibm-plex-mono/500.css';
+
 /**
  * Without this line `dark:` simply does not work in Tailwind 4. It is the single
  * most expensive missing line in a v3-to-v4 migration, because everything still
@@ -16,10 +32,30 @@
    */
   --color-ground: oklch(0.185 0.005 258);
   --color-surface: oklch(0.225 0.006 258);
-  --color-line: oklch(0.31 0.008 258);
+  --color-raised: oklch(0.262 0.007 258);
+
+  /*
+   * TWO border tokens, and the split is an accessibility requirement rather than
+   * a preference.
+   *
+   * WCAG 2.2 SC 1.4.11 asks for 3:1 on the visual information needed to identify
+   * a user interface component. The old single `--color-line` measured 1.42:1
+   * against the page and 1.30:1 against a panel — it was the only thing saying
+   * where an input began, and at low brightness or in sunlight the filters read
+   * as text floating in the dark.
+   *
+   * `--color-edge` is measured at 3.38:1 / 3.11:1 and belongs on anything a
+   * person operates: input, select, checkbox, button, tab.
+   * `--color-line` stays quiet and is for structure a component does not depend
+   * on — the rule between two table rows, a divider inside a panel.
+   */
+  --color-edge: oklch(0.52 0.008 258);
+  --color-line: oklch(0.34 0.008 258);
+
   --color-ink: oklch(0.94 0.004 258);
-  --color-ink-muted: oklch(0.68 0.008 258);
+  --color-ink-muted: oklch(0.7 0.008 258);
   --color-brass: oklch(0.78 0.11 82);
+  --color-brass-dim: oklch(0.44 0.06 82);
 
   /* Semantic state colours. Every state also carries an icon or a word: colour
      alone never communicates state — around 8% of men have some colour vision
@@ -31,6 +67,9 @@
   --color-state-failed: oklch(0.7 0.16 25);
   --color-state-capped: oklch(0.78 0.13 75);
   --color-state-doubtful: oklch(0.74 0.12 320);
+
+  --font-sans: 'IBM Plex Sans Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Consolas, monospace;
 }
 
 @layer base {
@@ -42,13 +81,18 @@
   body {
     background: var(--color-ground);
     color: var(--color-ink);
-    font-family:
-      ui-sans-serif,
-      system-ui,
-      -apple-system,
-      'Segoe UI',
-      sans-serif;
+    font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
+  }
+
+  /*
+   * Every digit the same width, everywhere, without asking each component to
+   * remember. In a price column the eye compares digit POSITION, and proportional
+   * figures make the comparison wrong before it starts.
+   */
+  .font-mono,
+  table {
+    font-variant-numeric: tabular-nums;
   }
 
   /*
@@ -73,5 +117,51 @@
   :focus-visible {
     outline: 2px solid var(--color-brass);
     outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  /* Someone who asked their system to stop moving things means it. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer components {
+  /*
+   * The price bar: magnitude you can see without reading a digit.
+   *
+   * Prices span four orders of magnitude — US$ 0.0002 to US$ 0.15, a factor of
+   * 750. No numeric format renders that difference: `0.000200` and `0.150000`
+   * occupy the same width and the cheapest row stops looking cheapest. Length is
+   * the one channel that carries magnitude pre-attentively, and a log scale is
+   * what keeps 750× inside one column.
+   *
+   * A `<div>` with a width, so it costs zero kilobytes — which is what the
+   * project's refusal of a charting library requires.
+   */
+  .barra-preco {
+    height: 3px;
+    border-radius: 999px;
+    background: var(--color-brass-dim);
+    min-width: 2px;
+  }
+
+  /*
+   * A table header that stays put. Scrolling past thirty rows without it means
+   * five columns of similar-looking numbers and dates with nothing saying which
+   * is which.
+   */
+  .cabecalho-fixo {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: var(--color-surface);
   }
 }
