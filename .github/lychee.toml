@@ -39,8 +39,23 @@ exclude = [
   # the check, and those are the links that can actually rot.
   "^https?://(api|queue)[.-][a-z0-9.-]+/",
   "^https://fal\\.run/",
-  "^https://[a-z0-9.-]+/v[0-9]+/",
+  "^https://[a-z0-9.-]+/v[0-9]+[a-z0-9]*/",
   "%7B",
+
+  # Truncated output examples from the survey, with literal ellipses in the middle
+  # of the URL. They are not links: they are the shape of the provider's response.
+  #
+  # Note the DOUBLE backslashes. In a TOML basic string `\.` is an invalid escape
+  # and the whole file fails to parse — which is how this config spent one CI run
+  # checking zero links while reporting a green-looking step.
+  "\\.\\.\\.",
+  "^https://im\\.runware\\.ai/image/",
+
+  # Real documentation pages that answer 403 to any automated client. That is bot
+  # protection, not a rotten link — and a checker that fails on it teaches people
+  # to ignore the checker.
+  "^https://help\\.openai\\.com/",
+  "^https://kie\\.ai/",
 ]
 
 exclude_path = [

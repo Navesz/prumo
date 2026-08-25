@@ -7,6 +7,10 @@
 
 `PLANO.md` §14 lists four 🔴 blockers — questions that stop code from being written. Two of them are answered here, by the owner, on 2026-08-24:
 
+<!-- markdownlint-disable-next-line MD029 -->
+<!-- A numeracao 2 e 3 e da origem: sao os bloqueios 2 e 3 do PLANO.md §14.
+     Renumerar para 1 e 2 quebraria a referencia. -->
+
 > 2. Does the gallery keep bytes forever or expire them? Retention decided later becomes a migration over large data — and it is the cost policy.
 > 3. Expected volume, in order of magnitude. If it is three images a day for one person — the most likely scenario for the first six months — then slots, EDF and backpressure are answers to a problem that does not exist.
 

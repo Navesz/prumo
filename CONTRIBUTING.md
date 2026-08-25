@@ -138,7 +138,7 @@ An adapter implements eight methods and nothing else.
 
 The shared contract test runs the same suite against every adapter using its fixtures. A provider is finished when it passes, plus:
 
-- a `provedor` row, including `auth_estilo` (the enum has five values because fal literally sends `Key `, not `Bearer`, and Google sends `x-goog-api-key`);
+- a `provedor` row, including `auth_estilo` (the enum has five values because fal literally sends `Key <token>`, not `Bearer <token>`, and Google sends `x-goog-api-key`);
 - one `modelo` row per endpoint, sub-endpoints included;
 - one `preco` row per model, with source, date, and method;
 - the destination hosts added to the closed outbound allowlist in code;
