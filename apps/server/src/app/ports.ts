@@ -82,9 +82,9 @@ export interface SessionsRepo {
 export interface BudgetRecord {
   readonly id: string
   readonly userId: string
-  readonly window: 'month' | 'day'
-  readonly windowStart: Date
-  readonly windowEnd: Date
+  readonly period: 'month' | 'day'
+  readonly periodStart: Date
+  readonly periodEnd: Date
   readonly capNano: bigint
   readonly reservedNano: bigint
   readonly spentNano: bigint
@@ -97,9 +97,9 @@ export interface BudgetsRepo {
   upsertCap(input: {
     id: string
     userId: string
-    window: 'month' | 'day'
-    windowStart: Date
-    windowEnd: Date
+    period: 'month' | 'day'
+    periodStart: Date
+    periodEnd: Date
     capNano: bigint
   }): Promise<BudgetRecord>
 
@@ -111,7 +111,7 @@ export interface BudgetsRepo {
    *   UPDATE budgets SET reserved_nano = reserved_nano + $cost
    *    WHERE ... AND spent_nano + reserved_nano + $cost <= cap_nano
    *
-   * Zero rows affected means the cap was reached. There is no window between
+   * Zero rows affected means the cap was reached. There is no period between
    * checking and debiting, which is what makes eight models fired in the same
    * millisecond structurally unable to cross the limit.
    *
@@ -119,8 +119,8 @@ export interface BudgetsRepo {
    */
   reserve(input: {
     userId: string
-    window: 'month' | 'day'
-    windowStart: Date
+    period: 'month' | 'day'
+    periodStart: Date
     costNano: bigint
   }): Promise<
     { reserved: true; remainingNano: bigint } | { reserved: false; availableNano: bigint }

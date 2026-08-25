@@ -199,7 +199,7 @@ function SignedIn({ user }: { user: { email: string; role: string; timezone: str
         ) : (
           <ul className="flex flex-col gap-3">
             {budgets.data?.budgets.map((budget) => (
-              <BudgetRow key={budget.window} budget={budget} />
+              <BudgetRow key={budget.period} budget={budget} />
             ))}
           </ul>
         )}
@@ -212,7 +212,7 @@ function BudgetRow({
   budget,
 }: {
   budget: {
-    window: 'month' | 'day'
+    period: 'month' | 'day'
     capNanoUsd: string
     spentNanoUsd: string
     reservedNanoUsd: string
@@ -226,7 +226,7 @@ function BudgetRow({
     mutationFn: (usd: string) =>
       api.budget.setCap({
         commandId: newCommandId(),
-        window: budget.window,
+        period: budget.period,
         capNanoUsd: usdToNano(usd),
       }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: keys.budgets }),
@@ -235,7 +235,7 @@ function BudgetRow({
   return (
     <li className="flex flex-wrap items-center justify-between gap-3 border-t border-(--color-line) pt-3 first:border-t-0 first:pt-0">
       <div>
-        <p className="text-sm">{budget.window === 'month' ? 'Mês' : 'Dia'}</p>
+        <p className="text-sm">{budget.period === 'month' ? 'Mês' : 'Dia'}</p>
         <p className="font-mono text-xs text-(--color-ink-muted)">
           gasto {formatUsd(budget.spentNanoUsd)} · reservado {formatUsd(budget.reservedNanoUsd)} ·
           teto {formatUsd(budget.capNanoUsd)}
@@ -252,7 +252,7 @@ function BudgetRow({
         <input
           inputMode="decimal"
           placeholder="10.00"
-          aria-label={`Novo teto em dólares para ${budget.window === 'month' ? 'o mês' : 'o dia'}`}
+          aria-label={`Novo teto em dólares para ${budget.period === 'month' ? 'o mês' : 'o dia'}`}
           value={draft}
           onChange={(event) => setDraft(event.target.value)}
           className="w-24 rounded border border-(--color-line) bg-(--color-ground) px-2 py-1 text-right font-mono text-sm tabular-nums"

@@ -1,5 +1,5 @@
 /**
- * Where a spending window begins, in the user's own timezone.
+ * Where a spending period begins, in the user's own timezone.
  *
  * This is not a detail. The Herz codebase carries a recorded bug (finding A2) of
  * comparing a local day against UTC midnight, in a system whose whole job is
@@ -10,10 +10,10 @@
  * Pure: no clock of its own, no I/O. The instant always arrives as an argument.
  */
 
-export type WindowKind = 'month' | 'day'
+export type PeriodKind = 'month' | 'day'
 
-export interface SpendWindow {
-  readonly kind: WindowKind
+export interface SpendPeriod {
+  readonly kind: PeriodKind
   readonly start: Date
   readonly end: Date
 }
@@ -105,7 +105,7 @@ export function zonedDate(
   return { year: read('year'), month: read('month'), day: read('day') }
 }
 
-export function monthWindow(instant: Date, timeZone: string): SpendWindow {
+export function monthPeriod(instant: Date, timeZone: string): SpendPeriod {
   const { year, month } = zonedDate(instant, timeZone)
   const nextYear = month === 12 ? year + 1 : year
   const nextMonth = month === 12 ? 1 : month + 1
@@ -125,7 +125,7 @@ export function monthWindow(instant: Date, timeZone: string): SpendWindow {
  * closes would make that name a lie. "Since midnight where you live" is something
  * both the code and the user can point at.
  */
-export function dayWindow(instant: Date, timeZone: string): SpendWindow {
+export function dayPeriod(instant: Date, timeZone: string): SpendPeriod {
   const { year, month, day } = zonedDate(instant, timeZone)
   const start = fromWallClock(timeZone, year, month, day)
 
@@ -141,6 +141,6 @@ export function dayWindow(instant: Date, timeZone: string): SpendWindow {
   }
 }
 
-export function windowFor(kind: WindowKind, instant: Date, timeZone: string): SpendWindow {
-  return kind === 'month' ? monthWindow(instant, timeZone) : dayWindow(instant, timeZone)
+export function periodFor(kind: PeriodKind, instant: Date, timeZone: string): SpendPeriod {
+  return kind === 'month' ? monthPeriod(instant, timeZone) : dayPeriod(instant, timeZone)
 }

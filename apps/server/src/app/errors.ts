@@ -20,8 +20,8 @@ export const fail = {
   registrationClosed: () => new AppError('REGISTRATION_CLOSED'),
   emailTaken: () => new AppError('EMAIL_TAKEN'),
   invalidCredentials: () => new AppError('INVALID_CREDENTIALS'),
-  budgetCap: (window: 'month' | 'day', availableNano: bigint, requestedNano: bigint) =>
-    new AppError(window === 'month' ? 'BUDGET_MONTH_CAP' : 'BUDGET_DAY_CAP', undefined, {
+  budgetCap: (period: 'month' | 'day', availableNano: bigint, requestedNano: bigint) =>
+    new AppError(period === 'month' ? 'BUDGET_MONTH_CAP' : 'BUDGET_DAY_CAP', undefined, {
       availableNanoUsd: availableNano.toString(10),
       requestedNanoUsd: requestedNano.toString(10),
     }),

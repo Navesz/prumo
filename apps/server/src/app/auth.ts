@@ -1,4 +1,4 @@
-import { windowFor } from '../domain/windows.js'
+import { periodFor } from '../domain/periods.js'
 import { fail } from './errors.js'
 import type { Clock, Ids, PasswordHasher, SessionTokens, UserRecord } from './ports.js'
 import type { UnitOfWork } from './unit-of-work.js'
@@ -92,13 +92,13 @@ export function createAuth(deps: AuthDeps) {
       // cent until somebody sets a number. The alternative — a helpful default —
       // is a system that spends money nobody authorised.
       for (const kind of ['month', 'day'] as const) {
-        const span = windowFor(kind, now, created.timezone)
+        const span = periodFor(kind, now, created.timezone)
         await repos.budgets.upsertCap({
           id: ids.next(),
           userId: created.id,
-          window: kind,
-          windowStart: span.start,
-          windowEnd: span.end,
+          period: kind,
+          periodStart: span.start,
+          periodEnd: span.end,
           capNano: 0n,
         })
       }

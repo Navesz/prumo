@@ -35,9 +35,9 @@ function toPublicUser(user: UserRecord): PublicUser {
 
 function toPublicBudget(budget: BudgetRecord) {
   return {
-    window: budget.window,
-    windowStart: budget.windowStart.toISOString(),
-    windowEnd: budget.windowEnd.toISOString(),
+    period: budget.period,
+    periodStart: budget.periodStart.toISOString(),
+    periodEnd: budget.periodEnd.toISOString(),
     capNanoUsd: formatNano(budget.capNano),
     reservedNanoUsd: formatNano(budget.reservedNano),
     spentNanoUsd: formatNano(budget.spentNano),
@@ -162,7 +162,7 @@ const setCap = os.budget.setCap.use(authenticated).handler(async ({ input, conte
   // an out-of-range amount and a negative cap with a message instead of a crash.
   const capNano = assertNonNegative(parseNano(input.capNanoUsd), 'A spending cap')
 
-  const budget = await context.budgets.setCap(context.user, input.window, capNano)
+  const budget = await context.budgets.setCap(context.user, input.period, capNano)
   return { budget: toPublicBudget(budget) }
 })
 

@@ -49,5 +49,7 @@ timeout = 20
 # signal the weekly run exists to produce.
 accept = [200, 204, 206, 429]
 
-exclude_mail = true
+# `include_mail`, not `exclude_mail`: the latter does not exist in lychee 0.24 and
+# the whole config file fails to parse, so the job dies before checking one link.
+include_mail = false
 no_progress = true

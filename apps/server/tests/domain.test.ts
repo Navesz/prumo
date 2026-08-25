@@ -7,7 +7,7 @@ import {
   parseNano,
   toUsdString,
 } from '../src/domain/money.js'
-import { dayWindow, monthWindow, TimezoneError } from '../src/domain/windows.js'
+import { dayPeriod, monthPeriod, TimezoneError } from '../src/domain/periods.js'
 
 describe('money', () => {
   it('keeps precision that a float would destroy', () => {
@@ -63,14 +63,14 @@ describe('money', () => {
   })
 })
 
-describe('spending windows', () => {
+describe('spending periods', () => {
   const SP = 'America/Sao_Paulo'
 
   it('starts the month at local midnight, not UTC midnight', () => {
     // 1 August 2026, 02:00 UTC is still 31 July, 23:00 in Sao Paulo. A UTC-based
-    // window would already have rolled over and released the cap a day early.
+    // period would already have rolled over and released the cap a day early.
     const instant = new Date('2026-08-01T02:00:00Z')
-    const july = monthWindow(instant, SP)
+    const july = monthPeriod(instant, SP)
 
     expect(july.start.toISOString()).toBe('2026-07-01T03:00:00.000Z')
     expect(july.end.toISOString()).toBe('2026-08-01T03:00:00.000Z')
@@ -78,38 +78,38 @@ describe('spending windows', () => {
   })
 
   it('agrees with UTC when the user lives in UTC', () => {
-    const window = monthWindow(new Date('2026-08-01T02:00:00Z'), 'UTC')
-    expect(window.start.toISOString()).toBe('2026-08-01T00:00:00.000Z')
-    expect(window.end.toISOString()).toBe('2026-09-01T00:00:00.000Z')
+    const period = monthPeriod(new Date('2026-08-01T02:00:00Z'), 'UTC')
+    expect(period.start.toISOString()).toBe('2026-08-01T00:00:00.000Z')
+    expect(period.end.toISOString()).toBe('2026-09-01T00:00:00.000Z')
   })
 
   it('wraps December into the next year', () => {
-    const window = monthWindow(new Date('2026-12-15T12:00:00Z'), 'UTC')
-    expect(window.end.toISOString()).toBe('2027-01-01T00:00:00.000Z')
+    const period = monthPeriod(new Date('2026-12-15T12:00:00Z'), 'UTC')
+    expect(period.end.toISOString()).toBe('2027-01-01T00:00:00.000Z')
   })
 
   it('keeps a day exactly one calendar day long, including across a DST change', () => {
     // New York moves its clocks on 8 March 2026, so that local day is 23 hours.
     // Adding 24 hours would land an hour into the next day.
-    const window = dayWindow(new Date('2026-03-08T12:00:00Z'), 'America/New_York')
-    const hours = (window.end.getTime() - window.start.getTime()) / 3_600_000
+    const period = dayPeriod(new Date('2026-03-08T12:00:00Z'), 'America/New_York')
+    const hours = (period.end.getTime() - period.start.getTime()) / 3_600_000
 
     expect(hours).toBe(23)
-    expect(window.start.toISOString()).toBe('2026-03-08T05:00:00.000Z')
-    expect(window.end.toISOString()).toBe('2026-03-09T04:00:00.000Z')
+    expect(period.start.toISOString()).toBe('2026-03-08T05:00:00.000Z')
+    expect(period.end.toISOString()).toBe('2026-03-09T04:00:00.000Z')
   })
 
   it('contains the instant it was asked about', () => {
     for (const zone of [SP, 'UTC', 'America/New_York', 'Asia/Tokyo', 'Australia/Sydney']) {
       const instant = new Date('2026-08-24T23:30:00Z')
-      for (const window of [monthWindow(instant, zone), dayWindow(instant, zone)]) {
-        expect(window.start.getTime()).toBeLessThanOrEqual(instant.getTime())
-        expect(window.end.getTime()).toBeGreaterThan(instant.getTime())
+      for (const period of [monthPeriod(instant, zone), dayPeriod(instant, zone)]) {
+        expect(period.start.getTime()).toBeLessThanOrEqual(instant.getTime())
+        expect(period.end.getTime()).toBeGreaterThan(instant.getTime())
       }
     }
   })
 
   it('refuses a timezone it does not know instead of silently using UTC', () => {
-    expect(() => monthWindow(new Date(), 'Mars/Olympus_Mons')).toThrow(TimezoneError)
+    expect(() => monthPeriod(new Date(), 'Mars/Olympus_Mons')).toThrow(TimezoneError)
   })
 })

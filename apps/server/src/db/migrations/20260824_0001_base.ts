@@ -80,9 +80,9 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     CREATE TABLE budgets (
       id             uuid PRIMARY KEY,
       user_id        uuid NOT NULL REFERENCES users (id) ON DELETE CASCADE,
-      window         text NOT NULL CHECK (window IN ('month', 'day')),
-      window_start   timestamptz NOT NULL,
-      window_end     timestamptz NOT NULL,
+      period         text NOT NULL CHECK (period IN ('month', 'day')),
+      period_start   timestamptz NOT NULL,
+      period_end     timestamptz NOT NULL,
       cap_nano       bigint NOT NULL CHECK (cap_nano >= 0),
       reserved_nano  bigint NOT NULL DEFAULT 0 CHECK (reserved_nano >= 0),
       spent_nano     bigint NOT NULL DEFAULT 0 CHECK (spent_nano >= 0),
@@ -96,7 +96,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
   `.execute(db)
 
   await sql`
-    CREATE UNIQUE INDEX budgets_window_key ON budgets (user_id, window, window_start)
+    CREATE UNIQUE INDEX budgets_period_key ON budgets (user_id, period, period_start)
   `.execute(db)
 
   // --- idempotency ------------------------------------------------------------

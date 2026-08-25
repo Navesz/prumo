@@ -50,8 +50,8 @@ export type UserRole = z.infer<typeof userRole>
  * lie. "Since midnight where you live" is something both the code and the user
  * can point at.
  */
-export const budgetWindow = z.enum(['month', 'day'])
-export type BudgetWindow = z.infer<typeof budgetWindow>
+export const budgetPeriod = z.enum(['month', 'day'])
+export type BudgetWindow = z.infer<typeof budgetPeriod>
 
 export const publicUser = z.object({
   id: userId,
@@ -66,9 +66,9 @@ export const publicUser = z.object({
 export type PublicUser = z.infer<typeof publicUser>
 
 export const budget = z.object({
-  window: budgetWindow,
-  windowStart: timestamp,
-  windowEnd: timestamp,
+  period: budgetPeriod,
+  periodStart: timestamp,
+  periodEnd: timestamp,
   capNanoUsd: nanoUsd,
   reservedNanoUsd: nanoUsd,
   spentNanoUsd: nanoUsd,
