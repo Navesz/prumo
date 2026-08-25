@@ -3,8 +3,9 @@
 > Fio de prumo: a ferramenta que prova que a parede está reta.
 > Aqui, a que prova que o preço está certo — e que a imagem saiu pelo menor preço.
 
-**Estado:** **M0 fechado, M1 de pé.** Portão provado, esqueleto vertical rodando,
-nenhum adaptador de provedor e nenhuma geração ainda.
+**Estado:** **M0 fechado, M1 de pé, CI verde.** Portão provado, esqueleto vertical
+rodando contra Postgres de verdade, nenhum adaptador de provedor e nenhuma geração
+ainda. Próximo: M2 (cofre de chaves).
 **Legenda:** ✅ provado · 🧪 decidido mas não medido · 🔴 bloqueia código · ⬜ planejado
 
 ---
