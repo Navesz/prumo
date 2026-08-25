@@ -68,10 +68,20 @@ export function createPool(options: PoolOptions): pg.Pool {
   if (options.role !== undefined) {
     const role = options.role
     pool.on('connect', (client) => {
-      // Fire-and-forget is wrong here: a connection that failed to drop its
-      // privileges must not serve a query. `pg` queues queries behind this one on
-      // the same client, and an error here surfaces on the pool's error handler.
-      void client.query(`SET ROLE ${quoteIdentifier(role)}`)
+      // `pg` queues every later query on this client behind this one, so the role
+      // is dropped before any application query runs.
+      //
+      // On failure the connection is DESTROYED rather than returned to the pool.
+      // A connection that could not drop its privileges is a connection still
+      // holding them, and handing it back would silently serve queries with row
+      // level security bypassed — the exact defect this whole mechanism exists to
+      // prevent. Failing loudly is the only safe outcome.
+      client.query(`SET ROLE ${quoteIdentifier(role)}`).catch((cause: unknown) => {
+        client.emit(
+          'error',
+          new Error(`Could not SET ROLE ${role}; refusing to use this connection`, { cause }),
+        )
+      })
     })
   }
 
