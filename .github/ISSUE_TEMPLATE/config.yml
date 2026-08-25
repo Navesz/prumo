@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Question, idea, or "is this supposed to work yet?"
+    url: https://github.com/Navesz/prumo/discussions
+    about: Prumo is at M0/M1 — no product functionality exists yet. Ask here before opening a scoped issue.
+  - name: Security report (private)
+    url: https://github.com/Navesz/prumo/security/advisories/new
+    about: Anything involving stored API keys, the vault, the budget ceiling, or cross-user access. Never in a public issue.
+  - name: A key of yours may have leaked
+    url: https://github.com/Navesz/prumo/security/advisories/new
+    about: Revoke the key at the provider first, then report privately. Rotation comes before the bug report.

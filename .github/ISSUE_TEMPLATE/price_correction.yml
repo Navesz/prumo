@@ -1,0 +1,166 @@
+name: Price correction
+description: Report a price in the Prumo catalog that is wrong, stale, or charged on the wrong basis
+title: '[Price]: '
+labels: ['area: catalog', 'type: price', 'needs-triage']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        A wrong price does not crash anything. It routes generations to a
+        provider that is not the cheapest, prints a confident number on the
+        confirmation screen, and makes the ledger report a spend that never
+        happened — with nothing red anywhere. That is the worst failure mode
+        this project has, which is why every row in the `preco` table carries
+        `fonte`, `coletado_em` and `metodo`, and why a row older than 30 days
+        drops out of the ranking on its own.
+
+        **A correction without a source URL cannot be merged.** Not because of
+        process: the column is `not null`, and a number with no provenance is
+        exactly the folklore the catalog exists to replace.
+
+        Never paste an API key, a receipt with account identifiers, or an
+        invoice PDF. A screenshot of a dashboard is fine once the account name,
+        e-mail and key are cropped out.
+  - type: dropdown
+    id: provider
+    attributes:
+      label: Provider
+      options:
+        - fal.ai
+        - Replicate
+        - KIE.ai
+        - WaveSpeed
+        - Runware
+        - OpenAI
+        - Google Gemini
+        - BFL / FLUX
+        - Together
+        - Novita
+        - DeepInfra
+        - Segmind
+        - Other (name it below)
+    validations:
+      required: true
+  - type: input
+    id: model
+    attributes:
+      label: Model
+      description: The exact slug or endpoint path the provider uses, not a marketing name.
+      placeholder: 'flux-2-pro  ·  black-forest-labs/FLUX.1-schnell-Free  ·  gpt-image-1'
+    validations:
+      required: true
+  - type: input
+    id: current
+    attributes:
+      label: What Prumo shows today
+      description: >-
+        The value and its unit as displayed, plus the catalog row id or file
+        path if you have it. Write "missing" if the model has no price at all.
+      placeholder: 'US$ 0.03 per image'
+    validations:
+      required: true
+  - type: input
+    id: correct
+    attributes:
+      label: What the correct price is
+      description: >-
+        Value and unit. USD, as the provider publishes it — do not convert.
+        Credits are not a unit: convert them and show the rate you used (BFL
+        publishes 1 credit = US$ 0.01).
+      placeholder: 'US$ 0.03 for the first megapixel, US$ 0.015 per additional megapixel'
+    validations:
+      required: true
+  - type: dropdown
+    id: basis
+    attributes:
+      label: How the provider actually charges this
+      description: >-
+        This field decides whether the estimate can be right at all. A catalog
+        of "USD per image" computes the wrong number for at least five of the
+        thirteen providers, and the router then picks the wrong route with
+        confidence.
+      options:
+        - Per image — flat, regardless of size
+        - Per image, but the flat price varies by size or quality tier
+        - Per megapixel
+        - Per megapixel, with a different price for the first megapixel
+        - Per diffusion step
+        - Per second of compute
+        - Per output token (OpenAI, Google)
+        - Formula over several parameters
+        - Per request, with a free tier or included quota
+        - Unknown / the documentation does not say
+    validations:
+      required: true
+  - type: textarea
+    id: formula
+    attributes:
+      label: The formula, if it is one
+      description: >-
+        Write it with named parameters and their ranges — the catalog stores a
+        discriminated union with numeric parameters, never an interpreted
+        expression, so a formula in prose here becomes explicit fields there.
+      placeholder: 'DeepInfra: 0.009 * (w/1024) * (h/1024) * (iters/25), w and h in pixels, iters = inference steps, default 25'
+      render: text
+  - type: input
+    id: source
+    attributes:
+      label: Official source URL (required)
+      description: >-
+        The provider's own pricing or API documentation page. Not a blog post,
+        not an aggregator, not a model marketplace listing, not a screenshot
+        host. If the only public number is in a changelog or a launch post, say
+        so here — a weak source recorded honestly is usable; a strong-looking
+        one that is wrong is not.
+      placeholder: 'https://bfl.ai/pricing'
+    validations:
+      required: true
+  - type: input
+    id: accessed
+    attributes:
+      label: Date you read that page (YYYY-MM-DD)
+      description: >-
+        Becomes `coletado_em`. Providers change prices without changelogs, and
+        this is the field that makes a stale row leave the ranking by itself.
+      placeholder: '2026-08-24'
+    validations:
+      required: true
+  - type: dropdown
+    id: method
+    attributes:
+      label: How you obtained the number
+      description: >-
+        Becomes `metodo`. A settled cost returned by the provider after a real
+        generation outranks any pricing page — the receipt corrects the catalog,
+        not the other way around.
+      options:
+        - Read from the official pricing page
+        - Read from the official API documentation
+        - Settled cost returned by the provider after a real generation
+        - Provider billing API or credit balance before/after a generation
+        - Invoice or dashboard line item
+        - Pre-flight estimate returned by the provider's own API
+        - Inferred from other documented numbers (explain below)
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: >-
+        Quote the exact sentence or table cell from the source. If this came
+        from a real generation, give the parameters (size, steps, quality) and
+        the settled amount, with account identifiers removed.
+    validations:
+      required: true
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Confirmation
+      options:
+        - label: The source URL is the provider's own domain and I opened it on the date above.
+          required: true
+        - label: The price is in USD as published, and any credit-to-USD conversion is stated.
+          required: true
+        - label: No API key, account identifier, or unredacted invoice is in this report.
+          required: true

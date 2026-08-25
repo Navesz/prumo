@@ -1,0 +1,58 @@
+version: 2
+updates:
+  # One root entry covers the whole monorepo: npm workspaces keep a single
+  # package-lock.json at the root, so a per-package entry would open PRs that
+  # cannot resolve their own lockfile.
+  #
+  # Grouped on purpose. Ungrouped bumps produce a dozen PRs a week, each one
+  # needing the full `verificar` run, and the reviewer stops reading them —
+  # which is how a malicious version lands with a green check and a rubber
+  # stamp. Fewer, larger PRs are read.
+  - package-ecosystem: npm
+    directory: '/'
+    schedule:
+      interval: weekly
+      day: monday
+      time: '06:00'
+      timezone: America/Sao_Paulo
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: 'chore(deps)'
+      prefix-development: 'chore(deps-dev)'
+    # `axios` is banned project-wide: its error object carries config.headers,
+    # so one console.error in a rare branch publishes a user's provider key to
+    # the log. Listed here so a bot PR can never introduce it as a direct
+    # dependency; the transitive case is caught by dependency-review.yml.
+    ignore:
+      - dependency-name: axios
+    groups:
+      runtime:
+        dependency-type: production
+        update-types: ['minor', 'patch']
+      development:
+        dependency-type: development
+        update-types: ['minor', 'patch']
+      # Majors stay ungrouped and land one at a time. A grouped major is a PR
+      # where the failing check does not identify which package broke it.
+      types:
+        patterns: ['@types/*']
+        update-types: ['minor', 'patch']
+
+  - package-ecosystem: github-actions
+    directory: '/'
+    schedule:
+      interval: weekly
+      day: monday
+      time: '06:00'
+      timezone: America/Sao_Paulo
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: 'chore(ci)'
+    groups:
+      actions:
+        patterns: ['*']
+
+  # Docker images in compose are not covered here yet: docker compose files are
+  # only picked up by the `docker-compose` ecosystem, and the compose file does
+  # not exist until M1. Add it in the same PR that adds the file, or the
+  # postgres:17-alpine pin ages without anyone watching it.

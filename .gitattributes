@@ -1,0 +1,49 @@
+* text=auto eol=lf
+
+# The owner develops on Windows and CI runs on Ubuntu. Without eol=lf a
+# checkout rewrites every file to CRLF and the shell scripts under ferramental/
+# stop being executable on Linux — the error is `bad interpreter: No such file
+# or directory`, which names the interpreter and not the carriage return.
+*.sh          text eol=lf
+*.mjs         text eol=lf
+*.cjs         text eol=lf
+*.ts          text eol=lf
+*.tsx         text eol=lf
+*.sql         text eol=lf
+*.yml         text eol=lf
+*.yaml        text eol=lf
+*.json        text eol=lf
+*.jsonc       text eol=lf
+*.md          text eol=lf
+
+# The git hook installed by ferramental/hooks/instalar.mjs has no extension.
+pre-commit    text eol=lf
+
+# Lockfiles: keep them in the diff, since a dependency change is a supply-chain
+# change and marking them binary hides it. `linguist-generated` only collapses
+# them by default in the web view, and it can still be expanded.
+package-lock.json  text eol=lf linguist-generated=true
+
+# Binary. Listed explicitly because `text=auto` guesses, and a guess that goes
+# wrong on an image corrupts it silently on checkout.
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.webp  binary
+*.avif  binary
+*.gif   binary
+*.ico   binary
+*.pdf   binary
+*.woff  binary
+*.woff2 binary
+
+# Never diffed and never merged: an .env is not supposed to be here at all,
+# but if one is ever staged by accident, a merge driver that prints its
+# contents into a conflict marker is the last thing anyone needs.
+*.env   binary -diff
+
+# Excluded from release archives — the tarball is for running Prumo, not for
+# reproducing its CI.
+/.github        export-ignore
+/.editorconfig  export-ignore
+/.gitattributes export-ignore

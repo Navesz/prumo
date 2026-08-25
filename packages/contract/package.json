@@ -1,0 +1,26 @@
+{
+  "name": "@prumo/contract",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "The API contract. One object types both the server and the client; divergence is a compile error.",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -b",
+    "clean": "rm -rf dist *.tsbuildinfo"
+  },
+  "dependencies": {
+    "@orpc/contract": "^1.15.0",
+    "zod": "^4.4.3"
+  }
+}
