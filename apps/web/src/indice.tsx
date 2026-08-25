@@ -561,7 +561,9 @@ function Procedencia({ entrada }: { entrada: Entry | null }) {
           href={entrada.source}
           target="_blank"
           rel="noreferrer noopener"
-          className="text-(--color-brass) underline underline-offset-2"
+          // 24px de alvo, que é o mínimo da 2.5.8. O link tinha 16 e não vale a
+          // exceção de "link dentro de frase": ele está sozinho na própria linha.
+          className="inline-flex min-h-6 w-fit items-center text-(--color-brass) underline underline-offset-2"
         >
           conferir na fonte
         </a>
