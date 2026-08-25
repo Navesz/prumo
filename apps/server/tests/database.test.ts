@@ -172,8 +172,8 @@ describe('the database, for real', () => {
       uow.run({ kind: 'user', userId: user.id }, (repos) =>
         repos.budgets.reserve({
           userId: user.id,
-          window: 'month',
-          windowStart: budget.windowStart,
+          period: 'month',
+          periodStart: budget.periodStart,
           costNano: cap,
         }),
       )
@@ -184,7 +184,7 @@ describe('the database, for real', () => {
     expect(winners).toBe(1)
 
     const after = await budgets.list(user)
-    const month = after.find((b) => b.window === 'month')
+    const month = after.find((b) => b.period === 'month')
     expect(month?.reservedNano).toBe(cap)
     expect((month?.reservedNano ?? 0n) + (month?.spentNano ?? 0n)).toBeLessThanOrEqual(cap)
   })
@@ -197,8 +197,8 @@ describe('the database, for real', () => {
     const refused = await uow.run({ kind: 'user', userId: user.id }, (repos) =>
       repos.budgets.reserve({
         userId: user.id,
-        window: 'month',
-        windowStart: budget.windowStart,
+        period: 'month',
+        periodStart: budget.periodStart,
         costNano: 5_000_000n,
       }),
     )

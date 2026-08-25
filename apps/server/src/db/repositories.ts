@@ -124,9 +124,9 @@ function toBudget(row: BudgetRow): BudgetRecord {
   return {
     id: row.id,
     userId: row.user_id,
-    window: row.window,
-    windowStart: row.window_start,
-    windowEnd: row.window_end,
+    period: row.period,
+    periodStart: row.period_start,
+    periodEnd: row.period_end,
     capNano: row.cap_nano,
     reservedNano: row.reserved_nano,
     spentNano: row.spent_nano,
@@ -142,8 +142,8 @@ function makeBudgets(trx: Transaction<Database>): BudgetsRepo {
         .selectFrom('budgets')
         .selectAll()
         .where('user_id', '=', userId)
-        .where('window_end', '>', now)
-        .orderBy('window')
+        .where('period_end', '>', now)
+        .orderBy('period')
         .execute()
       return rows.map(toBudget)
     },
@@ -154,14 +154,14 @@ function makeBudgets(trx: Transaction<Database>): BudgetsRepo {
         .values({
           id: input.id,
           user_id: input.userId,
-          window: input.window,
-          window_start: input.windowStart,
-          window_end: input.windowEnd,
+          period: input.period,
+          period_start: input.periodStart,
+          period_end: input.periodEnd,
           cap_nano: input.capNano,
         })
         .onConflict((oc) =>
           oc
-            .columns(['user_id', 'window', 'window_start'])
+            .columns(['user_id', 'period', 'period_start'])
             .doUpdateSet({ cap_nano: input.capNano, updated_at: new Date() }),
         )
         .returningAll()
@@ -183,8 +183,8 @@ function makeBudgets(trx: Transaction<Database>): BudgetsRepo {
           updated_at: new Date(),
         }))
         .where('user_id', '=', input.userId)
-        .where('window', '=', input.window)
-        .where('window_start', '=', input.windowStart)
+        .where('period', '=', input.period)
+        .where('period_start', '=', input.periodStart)
         .where((eb) =>
           eb(
             eb('spent_nano', '+', eb.ref('reserved_nano')),
@@ -206,8 +206,8 @@ function makeBudgets(trx: Transaction<Database>): BudgetsRepo {
         .selectFrom('budgets')
         .select(['cap_nano', 'spent_nano', 'reserved_nano'])
         .where('user_id', '=', input.userId)
-        .where('window', '=', input.window)
-        .where('window_start', '=', input.windowStart)
+        .where('period', '=', input.period)
+        .where('period_start', '=', input.periodStart)
         .executeTakeFirst()
 
       const available = current ? current.cap_nano - current.spent_nano - current.reserved_nano : 0n

@@ -1,4 +1,4 @@
-import { windowFor, type WindowKind } from '../domain/windows.js'
+import { periodFor, type PeriodKind } from '../domain/periods.js'
 import type { BudgetRecord, Clock, Ids, UserRecord } from './ports.js'
 import type { UnitOfWork } from './unit-of-work.js'
 
@@ -24,29 +24,29 @@ export function createBudgets(deps: BudgetDeps) {
 
     return uow.run({ kind: 'user', userId: user.id }, async (repos) => {
       const existing = await repos.budgets.listForUser(user.id, now)
-      const byWindow = new Map(existing.map((b) => [b.window, b]))
+      const byWindow = new Map(existing.map((b) => [b.period, b]))
       const result: BudgetRecord[] = []
 
       for (const kind of ['month', 'day'] as const) {
-        const span = windowFor(kind, now, user.timezone)
+        const span = periodFor(kind, now, user.timezone)
         const current = byWindow.get(kind)
 
-        if (current && current.windowStart.getTime() === span.start.getTime()) {
+        if (current && current.periodStart.getTime() === span.start.getTime()) {
           result.push(current)
           continue
         }
 
-        // A new window. The cap carries over from the previous one — a user who
+        // A new period. The cap carries over from the previous one — a user who
         // set a cap last month meant it as a policy, not as a one-off — but the
         // spent and reserved counters start at zero because they belong to the
-        // window, not to the person.
+        // period, not to the person.
         result.push(
           await repos.budgets.upsertCap({
             id: ids.next(),
             userId: user.id,
-            window: kind,
-            windowStart: span.start,
-            windowEnd: span.end,
+            period: kind,
+            periodStart: span.start,
+            periodEnd: span.end,
             capNano: current?.capNano ?? 0n,
           }),
         )
@@ -58,19 +58,19 @@ export function createBudgets(deps: BudgetDeps) {
 
   async function setCap(
     user: UserRecord,
-    kind: WindowKind,
+    kind: PeriodKind,
     capNano: bigint,
   ): Promise<BudgetRecord> {
     const now = clock.now()
-    const span = windowFor(kind, now, user.timezone)
+    const span = periodFor(kind, now, user.timezone)
 
     return uow.run({ kind: 'user', userId: user.id }, (repos) =>
       repos.budgets.upsertCap({
         id: ids.next(),
         userId: user.id,
-        window: kind,
-        windowStart: span.start,
-        windowEnd: span.end,
+        period: kind,
+        periodStart: span.start,
+        periodEnd: span.end,
         capNano,
       }),
     )

@@ -51,9 +51,9 @@ export interface SessionsTable {
 export interface BudgetsTable {
   id: string
   user_id: string
-  window: 'month' | 'day'
-  window_start: Timestamp
-  window_end: Timestamp
+  period: 'month' | 'day'
+  period_start: Timestamp
+  period_end: Timestamp
   cap_nano: bigint
   reserved_nano: Generated<bigint>
   spent_nano: Generated<bigint>

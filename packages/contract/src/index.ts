@@ -1,7 +1,7 @@
 import { oc } from '@orpc/contract'
 import * as z from 'zod'
 import { errors } from './errors.js'
-import { budget, budgetWindow, commandId, email, passwordSchema, publicUser } from './primitives.js'
+import { budget, budgetPeriod, commandId, email, passwordSchema, publicUser } from './primitives.js'
 
 export * from './primitives.js'
 export { errors } from './errors.js'
@@ -80,12 +80,12 @@ const budgets = {
     .output(z.object({ budgets: z.array(budget) })),
 
   setCap: oc
-    .route({ method: 'PUT', path: '/budgets/{window}' })
+    .route({ method: 'PUT', path: '/budgets/{period}' })
     .errors({ NOT_AUTHENTICATED: errors.NOT_AUTHENTICATED })
     .input(
       z.object({
         commandId,
-        window: budgetWindow,
+        period: budgetPeriod,
         capNanoUsd: z.string().regex(/^(0|[1-9]\d{0,18})$/, 'A spending cap cannot be negative'),
       }),
     )

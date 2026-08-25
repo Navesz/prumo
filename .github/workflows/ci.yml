@@ -73,7 +73,11 @@ jobs:
       # looks random invites someone to replace it with a real one "just to
       # test". Whatever encoding PRUMO_KEK ends up accepting, the boot
       # validator is the place to fix a mismatch — not this line.
-      PRUMO_KEK: '0000000000000000000000000000000000000000000000000000000000000000' # alicerce-segredo-ok: all-zero test KEK, never a real key
+      PRUMO_KEK: 'BwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwc=' # alicerce-segredo-ok: throwaway test KEK
+      # 32 bytes, base64 — the shape loadConfig() enforces. The previous value
+      # here was 64 hex characters, which decodes to 48 bytes and would have made
+      # the server refuse to boot the moment CI started running it.
+      PRUMO_PEPPER: 'CAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg=' # alicerce-segredo-ok: throwaway test pepper
       TZ: UTC
 
     steps:
@@ -169,7 +173,11 @@ jobs:
       DATABASE_URL: postgres://prumo:prumo@127.0.0.1:5432/prumo_test # alicerce-segredo-ok: local CI container, not a real credential
       PRUMO_PAPEL: tudo
       PRUMO_MODO: pessoal
-      PRUMO_KEK: '0000000000000000000000000000000000000000000000000000000000000000' # alicerce-segredo-ok: all-zero test KEK, never a real key
+      PRUMO_KEK: 'BwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwc=' # alicerce-segredo-ok: throwaway test KEK
+      # 32 bytes, base64 — the shape loadConfig() enforces. The previous value
+      # here was 64 hex characters, which decodes to 48 bytes and would have made
+      # the server refuse to boot the moment CI started running it.
+      PRUMO_PEPPER: 'CAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg=' # alicerce-segredo-ok: throwaway test pepper
       TZ: UTC
 
     steps:
