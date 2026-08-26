@@ -178,7 +178,11 @@
   --input: oklch(0.52 0.008 258);
   --ring: oklch(0.78 0.11 82);
 
-  --radius: 0.625rem;
+  /* 0,5rem e nao os 0,625rem do Herz: `rounded-lg` e o raio de todo o produto e
+     0,5rem e o padrao do Tailwind. Adotar o do Herz arredondaria cada canto de
+     8px para 10px sem ninguem ter pedido. Mudar a personalidade passa a ser um
+     numero — e no dia em que for, sera decisao, nao efeito colateral. */
+  --radius: 0.5rem;
 
   /* Seis significados, três tokens cada. Ver o comentário no @theme acima. */
   --espera: oklch(0.3 0.012 258);
