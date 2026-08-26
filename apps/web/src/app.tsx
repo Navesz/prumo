@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { api, formatUsd, newCommandId } from './api.js'
 import { Credentials } from './credentials.js'
-import { Indice } from './indice.js'
+import { Indice } from './features/precos/indice.js'
 
 /**
  * The shape of the product, in the order a person actually needs it.
