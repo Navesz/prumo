@@ -1,94 +1,232 @@
 @import 'tailwindcss';
 
 /*
- * Self-hosted, not Google Fonts. A stylesheet fetched from a third party on every
- * page load is a request this project does not need to make on somebody else's
- * behalf, and a self-hosted instance behind a firewall would silently fall back
- * to system-ui.
+ * Estes dois imports não são enfeite, e os dois foram medidos no CSS emitido.
  *
- * IBM Plex, not Inter. Inter is the default answer for any dashboard and would
- * make this look like every other one; Plex was drawn for engineering
- * documentation, its mono has real tabular figures, and the pairing carries the
- * instrument metaphor the project is named after. The variable weight of the sans
- * costs one file for the whole range.
+ * `shadcn/tailwind.css` define nove `@custom-variant` — data-active, data-open,
+ * data-closed, data-checked, data-selected, data-disabled e afins. O Tailwind 4
+ * conhece `data-*` nativamente, então sem este import a página COMPILA e quase
+ * funciona: `data-active:` vira `[data-active]`, atributo presente com qualquer
+ * valor. A definição do shadcn é `[data-state="active"], [data-active]:not(
+ * [data-active="false"])`. A diferença é o `="false"` — um componente que
+ * escreva o atributo com valor falso recebe o estilo de ATIVO. Hoje funcionaria
+ * por sorte, e `tabs.tsx` usa `data-active:` onze vezes.
+ *
+ * `tw-animate-css` traz `animate-in` / `animate-out`, que não são do Tailwind
+ * core. Sem ele o CSS emitido não contém NENHUMA regra para eles — conferido
+ * com grep no bundle — e a entrada e a saída do tooltip simplesmente não
+ * acontecem, sem erro em lugar nenhum.
+ */
+@import 'shadcn/tailwind.css';
+@import 'tw-animate-css';
+
+/*
+ * Auto-hospedado, não Google Fonts. Uma folha de estilo buscada num terceiro a
+ * cada carregamento é uma requisição que este projeto não precisa fazer em nome
+ * de ninguém, e uma instância atrás de firewall cairia calada no system-ui.
+ *
+ * IBM Plex, não Inter nem Geist. Inter é a resposta padrão de qualquer painel e
+ * deixaria isto com cara de todos os outros; o Herz usa Geist e é dele. Plex foi
+ * desenhado para documentação de engenharia, o mono tem algarismo tabular de
+ * verdade, e o par carrega a metáfora do instrumento que dá nome ao projeto.
  */
 @import '@fontsource-variable/ibm-plex-sans';
 @import '@fontsource/ibm-plex-mono/400.css';
 @import '@fontsource/ibm-plex-mono/500.css';
 
 /**
- * Without this line `dark:` simply does not work in Tailwind 4. It is the single
- * most expensive missing line in a v3-to-v4 migration, because everything still
- * compiles and the dark theme just never applies.
+ * Sem esta linha o `dark:` simplesmente não funciona no Tailwind 4. É a linha
+ * mais cara de esquecer numa migração da v3, porque tudo continua compilando e o
+ * tema escuro só nunca se aplica.
  */
 @custom-variant dark (&:is(.dark *));
 
-@theme {
-  /*
-   * Zinc base with the extremes pulled apart. In a grid of generated images, pure
-   * black makes a photo look cut out of the page and pure white gives a headlight
-   * effect around it. Dark is the default: a gallery of images is looked at in the
-   * dark.
-   */
-  --color-ground: oklch(0.185 0.005 258);
-  --color-surface: oklch(0.225 0.006 258);
-  --color-raised: oklch(0.262 0.007 258);
-
-  /*
-   * TWO border tokens, and the split is an accessibility requirement rather than
-   * a preference.
-   *
-   * WCAG 2.2 SC 1.4.11 asks for 3:1 on the visual information needed to identify
-   * a user interface component. The old single `--color-line` measured 1.42:1
-   * against the page and 1.30:1 against a panel — it was the only thing saying
-   * where an input began, and at low brightness or in sunlight the filters read
-   * as text floating in the dark.
-   *
-   * `--color-edge` is measured at 3.38:1 / 3.11:1 and belongs on anything a
-   * person operates: input, select, checkbox, button, tab.
-   * `--color-line` stays quiet and is for structure a component does not depend
-   * on — the rule between two table rows, a divider inside a panel.
-   */
-  --color-edge: oklch(0.52 0.008 258);
-  --color-line: oklch(0.34 0.008 258);
-
-  --color-ink: oklch(0.94 0.004 258);
-  --color-ink-muted: oklch(0.7 0.008 258);
-  --color-brass: oklch(0.78 0.11 82);
-  --color-brass-dim: oklch(0.44 0.06 82);
-
-  /* Semantic state colours. Every state also carries an icon or a word: colour
-     alone never communicates state — around 8% of men have some colour vision
-     deficiency, and "failed" versus "ready" on an image card would otherwise be
-     distinguishable only by hue. */
-  --color-state-queued: oklch(0.72 0.03 258);
-  --color-state-running: oklch(0.75 0.13 240);
-  --color-state-ready: oklch(0.76 0.14 155);
-  --color-state-failed: oklch(0.7 0.16 25);
-  --color-state-capped: oklch(0.78 0.13 75);
-  --color-state-doubtful: oklch(0.74 0.12 320);
-
+/*
+ * A ponte entre os tokens do shadcn e o Tailwind.
+ *
+ * `@theme inline` é o que faz `bg-card` existir como classe apontando para
+ * `var(--card)`. Sem isto, os nove componentes gerados escrevem classes que o
+ * Tailwind não conhece.
+ */
+@theme inline {
   --font-sans: 'IBM Plex Sans Variable', ui-sans-serif, system-ui, sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Consolas, monospace;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /*
+   * As famílias de estado, no padrão que o Herz provou: cada significado tem
+   * fundo, TEXTO e LINHA, não só uma cor solta. Sem o `-fg` o componente escolhe
+   * o texto no olho e o contraste vira loteria; sem o `-line` a etiqueta não tem
+   * como se separar do cartão em que está.
+   *
+   * Cor nunca vem sozinha: todo estado carrega também um ícone ou uma palavra.
+   * Cerca de 8% dos homens têm alguma deficiência de visão de cor, e "pronto"
+   * contra "falhou" num cartão de imagem seria distinguível só pela matiz.
+   */
+  --color-espera: var(--espera);
+  --color-espera-fg: var(--espera-fg);
+  --color-espera-line: var(--espera-line);
+  --color-execucao: var(--execucao);
+  --color-execucao-fg: var(--execucao-fg);
+  --color-execucao-line: var(--execucao-line);
+  --color-pronto: var(--pronto);
+  --color-pronto-fg: var(--pronto-fg);
+  --color-pronto-line: var(--pronto-line);
+  --color-falha: var(--falha);
+  --color-falha-fg: var(--falha-fg);
+  --color-falha-line: var(--falha-line);
+  --color-teto: var(--teto);
+  --color-teto-fg: var(--teto-fg);
+  --color-teto-line: var(--teto-line);
+  --color-duvida: var(--duvida);
+  --color-duvida-fg: var(--duvida-fg);
+  --color-duvida-line: var(--duvida-line);
+
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+}
+
+/*
+ * Os valores ficam em `:root`, não em `.dark`.
+ *
+ * O Prumo é escuro e ponto — uma galeria de imagem geradas se olha no escuro. Mas
+ * pendurar a paleta inteira em `.dark` significa que, no dia em que a classe
+ * sumir do `<html>` por qualquer motivo, a página fica SEM COR NENHUMA em vez de
+ * ficar clara. Em `:root` ela sempre vale; a classe `dark` no HTML existe só para
+ * as variantes `dark:` dos componentes do shadcn dispararem.
+ */
+:root {
+  color-scheme: dark;
+
+  /*
+   * Base zinc com os extremos afastados. Numa grade de imagens geradas, preto
+   * puro faz a foto parecer recortada da página e branco puro dá efeito de farol
+   * em volta dela. O cartão fica ACIMA do fundo, para haver camada e não um
+   * plano só.
+   */
+  --background: oklch(0.185 0.005 258);
+  --foreground: oklch(0.94 0.004 258);
+  --card: oklch(0.225 0.006 258);
+  --card-foreground: oklch(0.94 0.004 258);
+  --popover: oklch(0.235 0.006 258);
+  --popover-foreground: oklch(0.94 0.004 258);
+
+  /*
+   * Latão como primária. É a cor do instrumento que dá nome ao projeto, e é o
+   * que impede este painel de ser mais um azul.
+   */
+  --primary: oklch(0.78 0.11 82);
+  --primary-foreground: oklch(0.185 0.005 258);
+  --primary-dim: oklch(0.44 0.06 82);
+
+  --secondary: oklch(0.262 0.007 258);
+  --secondary-foreground: oklch(0.94 0.004 258);
+  --muted: oklch(0.262 0.007 258);
+  --muted-foreground: oklch(0.7 0.008 258);
+  --accent: oklch(0.31 0.007 258);
+  --accent-foreground: oklch(0.94 0.004 258);
+
+  --destructive: oklch(0.7 0.16 25);
+  --destructive-foreground: oklch(0.985 0 0);
+
+  /*
+   * DOIS tokens de borda, e a separação é exigência de acessibilidade, não gosto
+   * — e o shadcn por sorte já a tinha com outros nomes.
+   *
+   * A WCAG 2.2 SC 1.4.11 pede 3:1 na informação visual que identifica um
+   * componente de interface. A borda decorativa media 1.42:1 contra a página e
+   * era a única coisa dizendo onde um campo começava: com brilho baixo ou sob
+   * sol, os filtros liam como texto flutuando no escuro.
+   *
+   * `--input` está medido em 3.38:1 contra o fundo e 3.11:1 contra o cartão, e
+   * vai no que a pessoa OPERA: campo, seletor, caixa, botão, aba. `--border` fica
+   * quieto e é para estrutura de que nenhum componente depende — a régua entre
+   * duas linhas de tabela, um divisor dentro de um painel.
+   *
+   * Isto não foi adaptação: o `button.tsx` gerado já escreve `border-border` na
+   * variante padrão e `dark:border-input` na de contorno.
+   */
+  --border: oklch(0.34 0.008 258);
+  --input: oklch(0.52 0.008 258);
+  --ring: oklch(0.78 0.11 82);
+
+  --radius: 0.625rem;
+
+  /* Seis significados, três tokens cada. Ver o comentário no @theme acima. */
+  --espera: oklch(0.3 0.012 258);
+  --espera-fg: oklch(0.82 0.03 258);
+  --espera-line: oklch(0.44 0.016 258);
+  --execucao: oklch(0.3 0.05 240);
+  --execucao-fg: oklch(0.84 0.11 240);
+  --execucao-line: oklch(0.45 0.07 240);
+  --pronto: oklch(0.3 0.05 155);
+  --pronto-fg: oklch(0.85 0.12 155);
+  --pronto-line: oklch(0.44 0.07 155);
+  --falha: oklch(0.31 0.06 25);
+  --falha-fg: oklch(0.85 0.11 25);
+  --falha-line: oklch(0.46 0.09 25);
+  --teto: oklch(0.31 0.05 75);
+  --teto-fg: oklch(0.86 0.11 75);
+  --teto-line: oklch(0.45 0.08 75);
+  --duvida: oklch(0.31 0.05 320);
+  --duvida-fg: oklch(0.85 0.1 320);
+  --duvida-line: oklch(0.45 0.07 320);
+
+  /* O gráfico usa as matizes das famílias — etiqueta e barra concordam. */
+  --chart-1: oklch(0.78 0.11 82);
+  --chart-2: oklch(0.7 0.13 240);
+  --chart-3: oklch(0.72 0.14 155);
+  --chart-4: oklch(0.7 0.15 25);
+  --chart-5: oklch(0.7 0.12 320);
 }
 
 @layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
   html {
-    color-scheme: dark;
-    background: var(--color-ground);
+    @apply font-sans;
+    background: var(--background);
   }
 
   body {
-    background: var(--color-ground);
-    color: var(--color-ink);
-    font-family: var(--font-sans);
+    @apply bg-background text-foreground;
     -webkit-font-smoothing: antialiased;
   }
 
   /*
-   * Every digit the same width, everywhere, without asking each component to
-   * remember. In a price column the eye compares digit POSITION, and proportional
-   * figures make the comparison wrong before it starts.
+   * Todo algarismo com a mesma largura, em todo lugar, sem cada componente
+   * precisar lembrar. Numa coluna de preço o olho compara POSIÇÃO de dígito, e
+   * algarismo proporcional torna a comparação errada antes de ela começar.
    */
   .font-mono,
   table {
@@ -96,31 +234,62 @@
   }
 
   /*
-   * Tailwind 4 removed `cursor: pointer` from preflight and shadcn does not put it
-   * back, so nothing clickable changes the cursor until somebody notices. These
-   * are the affordances, restored once, centrally.
+   * Afordância de ponteiro, herdada do Herz e mais completa que a que eu tinha.
+   *
+   * O Tailwind 3 trazia `button, [role="button"] { cursor: pointer }` no
+   * preflight. O Tailwind 4 removeu para seguir o padrão do navegador, e o shadcn
+   * não repõe em componente nenhum — resultado: nada clicável muda o cursor.
+   *
+   * A correção certa é uma regra de base cobrindo o que é interativo por
+   * SEMÂNTICA, não uma classe `cursor-pointer` espalhada por componente. Assim
+   * vale também para todo componente que ainda não foi escrito.
    */
   button:not(:disabled),
-  [role='button']:not(:disabled),
-  a[href],
+  [role='button']:not([aria-disabled='true']),
+  [role='menuitem']:not([aria-disabled='true']),
+  [role='option']:not([aria-disabled='true']),
+  [role='tab']:not([aria-disabled='true']),
+  [role='checkbox']:not([aria-disabled='true']),
+  [role='radio']:not([aria-disabled='true']),
+  [role='switch']:not([aria-disabled='true']),
+  [role='combobox']:not([aria-disabled='true']),
   summary,
   label[for],
-  select:not(:disabled) {
+  a[href],
+  select:not(:disabled),
+  input[type='checkbox']:not(:disabled),
+  input[type='radio']:not(:disabled),
+  input[type='file']:not(:disabled),
+  input[type='range']:not(:disabled) {
     cursor: pointer;
   }
 
+  /* Desabilitado tem de parecer desabilitado, não apenas apagado. */
   button:disabled,
-  [role='button'][aria-disabled='true'] {
+  select:disabled,
+  input:disabled,
+  textarea:disabled,
+  [aria-disabled='true'],
+  [data-disabled] {
     cursor: not-allowed;
   }
 
-  :focus-visible {
-    outline: 2px solid var(--color-brass);
-    outline-offset: 2px;
-    border-radius: 2px;
+  /* Texto editável mantém o cursor de texto, mesmo dentro de rótulo. */
+  input:not(
+      [type='checkbox'],
+      [type='radio'],
+      [type='file'],
+      [type='range'],
+      [type='button'],
+      [type='submit'],
+      [type='reset']
+    ):not(:disabled),
+  textarea:not(:disabled),
+  [contenteditable='true'] {
+    cursor: text;
   }
 
-  /* Someone who asked their system to stop moving things means it. */
+  /* Quem pediu ao sistema para parar de mexer as coisas está falando sério. */
   @media (prefers-reduced-motion: reduce) {
     *,
     *::before,
@@ -135,33 +304,22 @@
 
 @layer components {
   /*
-   * The price bar: magnitude you can see without reading a digit.
+   * A barra de preço: magnitude que se enxerga sem ler um dígito.
    *
-   * Prices span four orders of magnitude — US$ 0.0002 to US$ 0.15, a factor of
-   * 750. No numeric format renders that difference: `0.000200` and `0.150000`
-   * occupy the same width and the cheapest row stops looking cheapest. Length is
-   * the one channel that carries magnitude pre-attentively, and a log scale is
-   * what keeps 750× inside one column.
+   * Os preços cobrem quatro ordens de grandeza — de US$ 0,0002 a US$ 0,15 por
+   * imagem, um fator de 750. Nenhum formato numérico mostra essa diferença:
+   * `0.000200` e `0.150000` ocupam a mesma largura e a linha mais barata deixa de
+   * parecer a mais barata. Comprimento é o único canal que carrega magnitude
+   * antes da atenção consciente, e escala log é o que mantém 750× dentro de uma
+   * coluna.
    *
-   * A `<div>` with a width, so it costs zero kilobytes — which is what the
-   * project's refusal of a charting library requires.
+   * Uma `<div>` com largura, então custa zero quilobyte — que é o que a recusa de
+   * uma biblioteca de gráfico neste projeto exige.
    */
   .barra-preco {
     height: 3px;
     border-radius: 999px;
-    background: var(--color-brass-dim);
+    background: var(--primary-dim);
     min-width: 2px;
-  }
-
-  /*
-   * A table header that stays put. Scrolling past thirty rows without it means
-   * five columns of similar-looking numbers and dates with nothing saying which
-   * is which.
-   */
-  .cabecalho-fixo {
-    position: sticky;
-    top: 0;
-    z-index: 1;
-    background: var(--color-surface);
   }
 }

@@ -178,10 +178,10 @@ export function Indice() {
         semPreco={grupos.length - comparaveis}
       />
 
-      <p role="status" aria-live="polite" className="text-sm text-(--color-ink-muted)">
+      <p role="status" aria-live="polite" className="text-sm text-muted-foreground">
         {buscaEcoada === busca && (
           <>
-            <strong className="text-(--color-ink) tabular-nums">{filtrados.length}</strong>{' '}
+            <strong className="text-foreground tabular-nums">{filtrados.length}</strong>{' '}
             {filtrados.length === 1 ? 'modelo' : 'modelos'}
             {provedor !== '' || busca !== '' || soComparaveis ? ` de ${universo}` : ''}
           </>
@@ -230,18 +230,18 @@ function Manchete({
   maisBarato: Grupo | null
 }) {
   return (
-    <header className="flex flex-col gap-4 border-b border-(--color-line) pb-6">
+    <header className="flex flex-col gap-4 border-b border-border pb-6">
       <div className="flex flex-col gap-2">
         <h2 className="text-xl font-medium tracking-tight sm:text-2xl">
           Quanto custa mil imagens, em cada lugar que gera
         </h2>
-        <p className="max-w-2xl text-sm leading-relaxed text-(--color-ink-muted)">
+        <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">
           O mesmo modelo custa preços diferentes em provedores diferentes. Esta tabela mostra a
           diferença — sem conta e sem chave. Cada preço carrega de onde veio e de quando é.
         </p>
       </div>
 
-      <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-(--color-line) bg-(--color-line) sm:grid-cols-4">
+      <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-4">
         <Numero rotulo="modelos no índice" valor={modelos.toLocaleString('pt-BR')} />
         <Numero rotulo="com preço comparável" valor={comparaveis.toLocaleString('pt-BR')} />
         <Numero rotulo="com preço em dois lugares" valor={disputados.toLocaleString('pt-BR')} />
@@ -265,13 +265,13 @@ function Numero({
   destaque?: boolean
 }) {
   return (
-    <div className="bg-(--color-surface) px-4 py-3">
+    <div className="bg-card px-4 py-3">
       <dd
-        className={`font-mono text-lg tracking-tight tabular-nums ${destaque ? 'text-(--color-brass)' : ''}`}
+        className={`font-mono text-lg tracking-tight tabular-nums ${destaque ? 'text-primary' : ''}`}
       >
         {valor}
       </dd>
-      <dt className="mt-0.5 text-xs text-(--color-ink-muted)">{rotulo}</dt>
+      <dt className="mt-0.5 text-xs text-muted-foreground">{rotulo}</dt>
     </div>
   )
 }
@@ -312,7 +312,7 @@ function Filtros({
           value={busca}
           onChange={(e) => aoBuscar(e.target.value)}
           placeholder="flux, seedream, nano banana…"
-          className="w-full rounded-lg border border-(--color-edge) bg-(--color-surface) px-3 py-2.5 text-sm placeholder:text-(--color-ink-muted) sm:max-w-sm"
+          className="w-full rounded-lg border border-input bg-card px-3 py-2.5 text-sm placeholder:text-muted-foreground sm:max-w-sm"
         />
       </label>
 
@@ -360,8 +360,8 @@ function Chip({
       aria-pressed={ativo}
       className={`inline-flex min-h-10 items-center gap-1.5 rounded-full border px-3.5 text-sm transition-colors ${
         ativo
-          ? 'border-(--color-brass) bg-(--color-brass) font-medium text-(--color-ground)'
-          : 'border-(--color-edge) text-(--color-ink-muted) hover:text-(--color-ink)'
+          ? 'border-primary bg-primary font-medium text-primary-foreground'
+          : 'border-input text-muted-foreground hover:text-foreground'
       }`}
     >
       {children}
@@ -383,37 +383,37 @@ function Tabela({
   aoAbrir: (v: string | null) => void
 }) {
   return (
-    <div className="hidden overflow-hidden rounded-lg border border-(--color-line) md:block">
+    <div className="hidden overflow-hidden rounded-lg border border-border md:block">
       <div className="max-h-[70vh] overflow-y-auto">
         <table className="w-full border-collapse text-sm">
           <caption className="sr-only">
             Modelos de geração de imagem e o preço de mil imagens em cada provedor, ordenados do
             mais barato para o mais caro.
           </caption>
-          <thead className="cabecalho-fixo">
-            <tr className="border-b border-(--color-edge)">
+          <thead className="sticky top-0 z-10 bg-card">
+            <tr className="border-b border-input">
               <th
                 scope="col"
-                className="px-4 py-2.5 text-left text-xs font-medium text-(--color-ink-muted)"
+                className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground"
               >
                 Modelo
               </th>
               <th
                 scope="col"
                 aria-sort="ascending"
-                className="px-4 py-2.5 text-right text-xs font-medium text-(--color-ink-muted)"
+                className="px-4 py-2.5 text-right text-xs font-medium text-muted-foreground"
               >
                 Mil imagens ↑
               </th>
               <th
                 scope="col"
-                className="px-4 py-2.5 text-left text-xs font-medium text-(--color-ink-muted)"
+                className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground"
               >
                 Onde
               </th>
               <th
                 scope="col"
-                className="px-4 py-2.5 text-left text-xs font-medium text-(--color-ink-muted)"
+                className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground"
               >
                 Procedência
               </th>
@@ -434,7 +434,7 @@ function Tabela({
       </div>
 
       {grupos.length > 200 && (
-        <p className="border-t border-(--color-line) bg-(--color-surface) px-4 py-2.5 text-xs text-(--color-ink-muted)">
+        <p className="border-t border-border bg-card px-4 py-2.5 text-xs text-muted-foreground">
           Mostrando 200 de {grupos.length}. Filtre para chegar no que interessa — o resto não é
           escondido, só não cabe numa tela.
         </p>
@@ -458,14 +458,14 @@ function Linha({
 
   return (
     <>
-      <tr className="border-b border-(--color-line) transition-colors last:border-b-0 hover:bg-(--color-surface)">
+      <tr className="border-b border-border transition-colors last:border-b-0 hover:bg-card">
         {/* O identificador é cabeçalho de linha, e vem primeiro. Numa tabela cuja
             razão de existir é comparar o preço do MESMO modelo entre provedores,
             navegar a coluna de preço e ouvir "0,20" sem saber de qual modelo é
             não serve para nada. */}
         <th scope="row" className="px-4 py-3 text-left font-normal">
           <span className="block font-medium">{grupo.titulo}</span>
-          <span className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-(--color-ink-muted)">
+          <span className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
             {grupo.maker && <span>{grupo.maker}</span>}
             {barata?.tasks.slice(0, 2).map((t) => (
               <Etiqueta key={t}>{nomeDaTarefa(t)}</Etiqueta>
@@ -485,7 +485,7 @@ function Linha({
               />
             </>
           ) : (
-            <span className="text-xs text-(--color-ink-muted)">não publicado</span>
+            <span className="text-xs text-muted-foreground">não publicado</span>
           )}
         </td>
 
@@ -498,31 +498,31 @@ function Linha({
               aria-label={`${aberto ? 'Esconder' : 'Ver'} os ${grupo.provedores} provedores de ${grupo.titulo}`}
               className="min-h-10 text-left text-sm"
             >
-              <span className="block text-(--color-brass)">
+              <span className="block text-primary">
                 {grupo.provedores} provedores {aberto ? '▾' : '▸'}
               </span>
               {grupo.comparavel && grupo.fator > 1.05 && (
-                <span className="text-xs text-(--color-ink-muted)">
+                <span className="text-xs text-muted-foreground">
                   o mais caro custa {formatarVezes(grupo.fator)}
                 </span>
               )}
             </button>
           ) : (
-            <span className="text-(--color-ink-muted)">{barata?.providerName ?? '—'}</span>
+            <span className="text-muted-foreground">{barata?.providerName ?? '—'}</span>
           )}
         </td>
 
-        <td className="px-4 py-3 align-middle text-xs text-(--color-ink-muted)">
+        <td className="px-4 py-3 align-middle text-xs text-muted-foreground">
           <Procedencia entrada={barata} />
         </td>
       </tr>
 
       {aberto &&
         grupo.ofertas.map((oferta) => (
-          <tr key={oferta.modelId} className="border-b border-(--color-line) bg-(--color-surface)">
+          <tr key={oferta.modelId} className="border-b border-border bg-card">
             <th
               scope="row"
-              className="py-2 pr-4 pl-10 text-left text-xs font-normal text-(--color-ink-muted)"
+              className="py-2 pr-4 pl-10 text-left text-xs font-normal text-muted-foreground"
             >
               {oferta.name}
             </th>
@@ -563,13 +563,13 @@ function Procedencia({ entrada }: { entrada: Entry | null }) {
           rel="noreferrer noopener"
           // 24px de alvo, que é o mínimo da 2.5.8. O link tinha 16 e não vale a
           // exceção de "link dentro de frase": ele está sozinho na própria linha.
-          className="inline-flex min-h-6 w-fit items-center text-(--color-brass) underline underline-offset-2"
+          className="inline-flex min-h-6 w-fit items-center text-primary underline underline-offset-2"
         >
           conferir na fonte
         </a>
       )}
       {!entrada.fresh && (
-        <span className="text-(--color-state-capped)">⚠ acima de 30 dias — fora do ranking</span>
+        <span className="text-(--color-teto-fg)">⚠ acima de 30 dias — fora do ranking</span>
       )}
     </span>
   )
@@ -580,8 +580,8 @@ function Etiqueta({ children, alerta = false }: { children: React.ReactNode; ale
     <span
       className={`rounded border px-1.5 py-0.5 text-[0.7rem] ${
         alerta
-          ? 'border-(--color-state-capped) text-(--color-state-capped)'
-          : 'border-(--color-line) text-(--color-ink-muted)'
+          ? 'border-(--color-teto-fg) text-(--color-teto-fg)'
+          : 'border-border text-muted-foreground'
       }`}
     >
       {children}
@@ -609,14 +609,11 @@ function Cartoes({
         const abertoAqui = aberto === g.chave
 
         return (
-          <li
-            key={g.chave}
-            className="rounded-lg border border-(--color-line) bg-(--color-surface) p-4"
-          >
+          <li key={g.chave} className="rounded-lg border border-border bg-card p-4">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <p className="font-medium">{g.titulo}</p>
-                <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-(--color-ink-muted)">
+                <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
                   {g.maker && <span>{g.maker}</span>}
                   {barata?.tasks.slice(0, 1).map((t) => (
                     <Etiqueta key={t}>{nomeDaTarefa(t)}</Etiqueta>
@@ -629,10 +626,10 @@ function Cartoes({
                 {barata?.costNanoUsd ? (
                   <>
                     <p className="font-mono tabular-nums">{formatarPorMil(barata.costNanoUsd)}</p>
-                    <p className="text-[0.7rem] text-(--color-ink-muted)">mil imagens</p>
+                    <p className="text-[0.7rem] text-muted-foreground">mil imagens</p>
                   </>
                 ) : (
-                  <p className="text-xs text-(--color-ink-muted)">não publicado</p>
+                  <p className="text-xs text-muted-foreground">não publicado</p>
                 )}
               </div>
             </div>
@@ -652,7 +649,7 @@ function Cartoes({
                   onClick={() => aoAbrir(abertoAqui ? null : g.chave)}
                   aria-expanded={abertoAqui}
                   aria-label={`${abertoAqui ? 'Esconder' : 'Ver'} os ${g.provedores} provedores de ${g.titulo}`}
-                  className="min-h-10 text-(--color-brass)"
+                  className="min-h-10 text-primary"
                 >
                   {g.provedores} provedores
                   {g.comparavel && g.fator > 1.05
@@ -661,16 +658,16 @@ function Cartoes({
                   {abertoAqui ? '▾' : '▸'}
                 </button>
               ) : (
-                <span className="text-(--color-ink-muted)">{barata?.providerName ?? '—'}</span>
+                <span className="text-muted-foreground">{barata?.providerName ?? '—'}</span>
               )}
               <Procedencia entrada={barata} />
             </div>
 
             {abertoAqui && (
-              <ul className="mt-3 flex flex-col gap-2 border-t border-(--color-line) pt-3">
+              <ul className="mt-3 flex flex-col gap-2 border-t border-border pt-3">
                 {g.ofertas.map((o) => (
                   <li key={o.modelId} className="flex items-baseline justify-between gap-3 text-xs">
-                    <span className="min-w-0 truncate text-(--color-ink-muted)">
+                    <span className="min-w-0 truncate text-muted-foreground">
                       {o.providerName} · {o.name}
                     </span>
                     <span className="shrink-0 font-mono tabular-nums">
@@ -682,7 +679,7 @@ function Cartoes({
             )}
 
             {barata?.costNanoUsd && (
-              <p className="mt-3 border-t border-(--color-line) pt-2 text-[0.7rem] text-(--color-ink-muted)">
+              <p className="mt-3 border-t border-border pt-2 text-[0.7rem] text-muted-foreground">
                 {formatarUnitario(barata.costNanoUsd)} · {IMAGENS_POR_MES.toLocaleString('pt-BR')}{' '}
                 por mês custam {custoMensal(barata.costNanoUsd, IMAGENS_POR_MES)}
               </p>
@@ -699,14 +696,11 @@ function Cartoes({
 function Carregando() {
   return (
     <div className="flex flex-col gap-3" aria-busy="true">
-      <p className="text-sm text-(--color-ink-muted)">Carregando o índice…</p>
+      <p className="text-sm text-muted-foreground">Carregando o índice…</p>
       {/* Esqueleto com a forma da tabela, não um giro genérico: a pessoa já
           entende o que vai chegar antes de chegar. */}
       {Array.from({ length: 6 }, (_, i) => (
-        <div
-          key={i}
-          className="h-14 animate-pulse rounded-lg border border-(--color-line) bg-(--color-surface)"
-        />
+        <div key={i} className="h-14 animate-pulse rounded-lg border border-border bg-card" />
       ))}
     </div>
   )
@@ -714,9 +708,9 @@ function Carregando() {
 
 function Erro() {
   return (
-    <div className="rounded-lg border border-(--color-state-failed) bg-(--color-surface) p-5">
+    <div className="rounded-lg border border-(--color-falha-fg) bg-card p-5">
       <p className="text-sm">Não deu para carregar o índice.</p>
-      <p className="mt-1 text-xs text-(--color-ink-muted)">
+      <p className="mt-1 text-xs text-muted-foreground">
         O servidor respondeu com erro. Os preços continuam no banco — é a leitura que falhou.
       </p>
     </div>
@@ -731,7 +725,7 @@ function Erro() {
  */
 function Vazio({ porFiltro, aoLimpar }: { porFiltro: boolean; aoLimpar: () => void }) {
   return (
-    <div className="rounded-lg border border-(--color-line) bg-(--color-surface) p-8 text-center">
+    <div className="rounded-lg border border-border bg-card p-8 text-center">
       <p className="text-sm">
         {porFiltro ? 'Nenhum modelo com esses filtros.' : 'O índice está vazio.'}
       </p>
@@ -739,12 +733,12 @@ function Vazio({ porFiltro, aoLimpar }: { porFiltro: boolean; aoLimpar: () => vo
         <button
           type="button"
           onClick={aoLimpar}
-          className="mt-3 min-h-10 rounded-lg border border-(--color-edge) px-4 text-sm"
+          className="mt-3 min-h-10 rounded-lg border border-input px-4 text-sm"
         >
           Limpar filtros
         </button>
       ) : (
-        <p className="mt-1 text-xs text-(--color-ink-muted)">
+        <p className="mt-1 text-xs text-muted-foreground">
           Rode <code className="font-mono">npm run coletar</code> para preencher.
         </p>
       )}
@@ -756,15 +750,15 @@ function SemPrecoPublicado({ provedores, quantos }: { provedores: string[]; quan
   if (provedores.length === 0) return null
 
   return (
-    <section className="rounded-lg border-l-2 border-(--color-state-queued) bg-(--color-surface) p-4 text-xs leading-relaxed text-(--color-ink-muted)">
-      <h3 className="mb-1 text-sm font-medium text-(--color-ink)">O que ainda não está aqui</h3>
+    <section className="rounded-lg border-l-2 border-(--color-espera-fg) bg-card p-4 text-xs leading-relaxed text-muted-foreground">
+      <h3 className="mb-1 text-sm font-medium text-foreground">O que ainda não está aqui</h3>
       <p>
-        <strong className="text-(--color-ink) tabular-nums">{quantos}</strong> modelos aparecem no
+        <strong className="text-foreground tabular-nums">{quantos}</strong> modelos aparecem no
         catálogo sem preço, porque o provedor não publica. E estes{' '}
-        <strong className="text-(--color-ink) tabular-nums">{provedores.length}</strong> não
-        publicam preço em formato nenhum que uma máquina leia: {provedores.join(', ')}. Os preços
-        deles entram à mão, por pull request, com a URL da fonte e a data — uma tabela que mostra só
-        o que é fácil de coletar se lê como “estes são todos os preços que existem”.
+        <strong className="text-foreground tabular-nums">{provedores.length}</strong> não publicam
+        preço em formato nenhum que uma máquina leia: {provedores.join(', ')}. Os preços deles
+        entram à mão, por pull request, com a URL da fonte e a data — uma tabela que mostra só o que
+        é fácil de coletar se lê como “estes são todos os preços que existem”.
       </p>
     </section>
   )

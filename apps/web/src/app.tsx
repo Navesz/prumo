@@ -40,9 +40,9 @@ export function App() {
           <div className="flex flex-col gap-1">
             <div className="flex items-baseline gap-3">
               <h1 className="text-3xl font-semibold tracking-tight">Prumo</h1>
-              <span className="font-mono text-xs text-(--color-brass)">M3</span>
+              <span className="font-mono text-xs text-primary">M3</span>
             </div>
-            <p className="max-w-xl text-sm text-(--color-ink-muted)">
+            <p className="max-w-xl text-sm text-muted-foreground">
               O preço real de gerar imagem com IA. Nenhuma geração existe ainda — é o próximo marco.
             </p>
           </div>
@@ -70,11 +70,7 @@ export function App() {
 }
 
 function Panel({ children }: { children: React.ReactNode }) {
-  return (
-    <section className="rounded-lg border border-(--color-line) bg-(--color-surface) p-5">
-      {children}
-    </section>
-  )
+  return <section className="rounded-lg border border-border bg-card p-5">{children}</section>
 }
 
 function Settings({ user }: { user: { email: string; role: string; timezone: string } }) {
@@ -94,13 +90,13 @@ function Settings({ user }: { user: { email: string; role: string; timezone: str
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <p className="text-sm">{user.email}</p>
-            <p className="font-mono text-xs text-(--color-ink-muted)">
+            <p className="font-mono text-xs text-muted-foreground">
               {user.role} · {user.timezone}
             </p>
           </div>
           <button
             onClick={() => signOut.mutate()}
-            className="min-h-10 rounded-lg border border-(--color-edge) px-3 text-sm"
+            className="min-h-10 rounded-lg border border-input px-3 text-sm"
           >
             Sair
           </button>
@@ -111,13 +107,13 @@ function Settings({ user }: { user: { email: string; role: string; timezone: str
 
       <Panel>
         <h2 className="mb-1 text-sm font-medium">Tetos de gasto</h2>
-        <p className="mb-4 text-xs text-(--color-ink-muted)">
+        <p className="mb-4 text-xs text-muted-foreground">
           Uma conta nova começa com teto zero. Nada é gasto até alguém escrever um número — o
           contrário seria um sistema que gasta dinheiro que ninguém autorizou.
         </p>
 
         {budgets.isPending ? (
-          <p className="text-sm text-(--color-ink-muted)">Carregando…</p>
+          <p className="text-sm text-muted-foreground">Carregando…</p>
         ) : (
           <ul className="flex flex-col gap-3">
             {budgets.data?.budgets.map((budget) => (
@@ -163,7 +159,7 @@ function SignedOut({ registrationOpen }: { registrationOpen: boolean }) {
 
   return (
     <Panel>
-      <p className="mb-4 text-xs text-(--color-ink-muted)">
+      <p className="mb-4 text-xs text-muted-foreground">
         A conta serve para guardar chave e teto de gasto. O índice de preços continua aberto sem
         ela.
       </p>
@@ -187,19 +183,19 @@ function SignedOut({ registrationOpen }: { registrationOpen: boolean }) {
         }}
       >
         <label className="flex flex-col gap-1">
-          <span className="text-xs text-(--color-ink-muted)">E-mail</span>
+          <span className="text-xs text-muted-foreground">E-mail</span>
           <input
             type="email"
             autoComplete="email"
             required
             value={email}
             onChange={(event) => setEmail(event.target.value)}
-            className="w-full rounded-lg border border-(--color-edge) bg-(--color-ground) px-3 py-2.5 text-sm"
+            className="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm"
           />
         </label>
 
         <label className="flex flex-col gap-1">
-          <span className="text-xs text-(--color-ink-muted)">Senha</span>
+          <span className="text-xs text-muted-foreground">Senha</span>
           <input
             type="password"
             autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
@@ -207,21 +203,21 @@ function SignedOut({ registrationOpen }: { registrationOpen: boolean }) {
             minLength={12}
             value={password}
             onChange={(event) => setPassword(event.target.value)}
-            className="w-full rounded-lg border border-(--color-edge) bg-(--color-ground) px-3 py-2.5 text-sm"
+            className="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm"
           />
-          <span className="text-xs text-(--color-ink-muted)">Mínimo de 12 caracteres.</span>
+          <span className="text-xs text-muted-foreground">Mínimo de 12 caracteres.</span>
         </label>
 
         <button
           type="submit"
           disabled={submit.isPending}
-          className="mt-1 rounded bg-(--color-brass) px-4 py-2 text-sm font-medium text-(--color-ground) disabled:opacity-60"
+          className="mt-1 rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60"
         >
           {submit.isPending ? 'Enviando…' : mode === 'register' ? 'Criar conta' : 'Entrar'}
         </button>
 
         {error && (
-          <p role="status" aria-live="polite" className="text-sm text-(--color-state-failed)">
+          <p role="status" aria-live="polite" className="text-sm text-(--color-falha-fg)">
             {error}
           </p>
         )}
@@ -255,10 +251,10 @@ function BudgetRow({
   })
 
   return (
-    <li className="flex flex-wrap items-center justify-between gap-3 border-t border-(--color-line) pt-3 first:border-t-0 first:pt-0">
+    <li className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-3 first:border-t-0 first:pt-0">
       <div>
         <p className="text-sm">{budget.period === 'month' ? 'Mês' : 'Dia'}</p>
-        <p className="font-mono text-xs text-(--color-ink-muted)">
+        <p className="font-mono text-xs text-muted-foreground">
           gasto {formatUsd(budget.spentNanoUsd)} · reservado {formatUsd(budget.reservedNanoUsd)} ·
           teto {formatUsd(budget.capNanoUsd)}
         </p>
@@ -277,12 +273,12 @@ function BudgetRow({
           aria-label={`Novo teto em dólares para ${budget.period === 'month' ? 'o mês' : 'o dia'}`}
           value={draft}
           onChange={(event) => setDraft(event.target.value)}
-          className="w-24 min-h-10 rounded-lg border border-(--color-edge) bg-(--color-ground) px-2 text-right font-mono text-sm tabular-nums"
+          className="w-24 min-h-10 rounded-lg border border-input bg-background px-2 text-right font-mono text-sm tabular-nums"
         />
         <button
           type="submit"
           disabled={save.isPending}
-          className="min-h-10 rounded-lg border border-(--color-edge) px-3 text-sm disabled:opacity-60"
+          className="min-h-10 rounded-lg border border-input px-3 text-sm disabled:opacity-60"
         >
           Salvar
         </button>
@@ -309,8 +305,8 @@ function Tab({
         // 3:1). A aba ativa ganha peso, cor de tinta cheia e uma régua de latão
         // embaixo — três canais, nenhum deles só matiz.
         active
-          ? 'min-h-10 rounded-lg border-b-2 border-(--color-brass) px-3 font-medium text-(--color-ink)'
-          : 'min-h-10 rounded-lg border-b-2 border-transparent px-3 text-(--color-ink-muted) hover:text-(--color-ink)'
+          ? 'min-h-10 rounded-lg border-b-2 border-primary px-3 font-medium text-foreground'
+          : 'min-h-10 rounded-lg border-b-2 border-transparent px-3 text-muted-foreground hover:text-foreground'
       }
     >
       {children}
