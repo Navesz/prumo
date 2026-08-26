@@ -29,29 +29,29 @@ export function Credentials() {
   })
 
   return (
-    <section className="flex flex-col gap-5 rounded-lg border border-(--color-line) bg-(--color-surface) p-5">
+    <section className="flex flex-col gap-5 rounded-lg border border-border bg-card p-5">
       <header className="flex flex-col gap-2">
         <h2 className="text-sm font-medium">Suas chaves de API</h2>
-        <p className="rounded border-l-2 border-(--color-state-capped) bg-(--color-ground) p-3 text-xs leading-relaxed text-(--color-ink-muted)">
-          <strong className="text-(--color-ink)">
+        <p className="rounded border-l-2 border-(--color-teto-fg) bg-background p-3 text-xs leading-relaxed text-muted-foreground">
+          <strong className="text-foreground">
             Quem hospeda esta instância consegue ler as suas chaves.
           </strong>{' '}
           Elas são cifradas no banco, o que protege contra dump, backup vazado e réplica restaurada
-          — e <strong className="text-(--color-ink)">não</strong> protege contra o servidor
+          — e <strong className="text-foreground">não</strong> protege contra o servidor
           comprometido, porque a chave que abre tudo vive na mesma máquina. Se você não confia em
           quem opera esta instância, não cole uma chave aqui: suba a sua.
           <br />
           <br />
-          Crie uma chave <strong className="text-(--color-ink)">dedicada ao Prumo</strong>, com
-          limite de gasto no painel do provedor. O teto do Prumo não vale nada se a chave vazar: ela
-          é usada direto na API do provedor.
+          Crie uma chave <strong className="text-foreground">dedicada ao Prumo</strong>, com limite
+          de gasto no painel do provedor. O teto do Prumo não vale nada se a chave vazar: ela é
+          usada direto na API do provedor.
         </p>
       </header>
 
       <AddKey providers={providers.data?.providers ?? []} />
 
       {credentials.isPending ? (
-        <p className="text-sm text-(--color-ink-muted)">Carregando…</p>
+        <p className="text-sm text-muted-foreground">Carregando…</p>
       ) : credentials.data && credentials.data.credentials.length > 0 ? (
         <ul className="flex flex-col gap-3">
           {credentials.data.credentials.map((credential) => (
@@ -66,7 +66,7 @@ export function Credentials() {
           ))}
         </ul>
       ) : (
-        <p className="text-sm text-(--color-ink-muted)">
+        <p className="text-sm text-muted-foreground">
           Nenhuma chave guardada. Sem pelo menos uma, não há como gerar imagem.
         </p>
       )}
@@ -113,14 +113,14 @@ function AddKey({ providers }: { providers: Provider[] }) {
 
   return (
     <form
-      className="flex flex-col gap-3 border-t border-(--color-line) pt-4"
+      className="flex flex-col gap-3 border-t border-border pt-4"
       onSubmit={(event) => {
         event.preventDefault()
         if (slug !== '' && secret !== '') add.mutate()
       }}
     >
       <label className="flex flex-col gap-1">
-        <span className="text-xs text-(--color-ink-muted)">Provedor</span>
+        <span className="text-xs text-muted-foreground">Provedor</span>
         <select
           required
           value={slug}
@@ -128,7 +128,7 @@ function AddKey({ providers }: { providers: Provider[] }) {
             setSlug(event.target.value)
             setResult(null)
           }}
-          className="w-full rounded border border-(--color-edge) bg-(--color-ground) px-3 py-2.5 text-sm"
+          className="w-full rounded border border-input bg-background px-3 py-2.5 text-sm"
         >
           <option value="">Escolha…</option>
           {providers.map((provider) => (
@@ -144,14 +144,14 @@ function AddKey({ providers }: { providers: Provider[] }) {
         <p
           role="status"
           aria-live="polite"
-          className="rounded bg-(--color-ground) p-2 text-xs text-(--color-state-capped)"
+          className="rounded bg-background p-2 text-xs text-(--color-teto-fg)"
         >
           {chosen.notice}
         </p>
       )}
 
       <label className="flex flex-col gap-1">
-        <span className="text-xs text-(--color-ink-muted)">Chave</span>
+        <span className="text-xs text-muted-foreground">Chave</span>
         <input
           type="password"
           required
@@ -160,35 +160,35 @@ function AddKey({ providers }: { providers: Provider[] }) {
           value={secret}
           onChange={(event) => setSecret(event.target.value)}
           placeholder="cole aqui"
-          className="w-full rounded border border-(--color-edge) bg-(--color-ground) px-3 py-2.5 font-mono text-sm"
+          className="w-full rounded border border-input bg-background px-3 py-2.5 font-mono text-sm"
         />
-        <span className="text-xs text-(--color-ink-muted)">
+        <span className="text-xs text-muted-foreground">
           Ela é guardada cifrada e nunca volta para a tela — nem mascarada. Depois de salvar, só os
           quatro últimos caracteres aparecem.
         </span>
       </label>
 
       <label className="flex flex-col gap-1">
-        <span className="text-xs text-(--color-ink-muted)">Apelido (opcional)</span>
+        <span className="text-xs text-muted-foreground">Apelido (opcional)</span>
         <input
           value={label}
           onChange={(event) => setLabel(event.target.value)}
           maxLength={80}
-          className="w-full rounded border border-(--color-edge) bg-(--color-ground) px-3 py-2.5 text-sm"
+          className="w-full rounded border border-input bg-background px-3 py-2.5 text-sm"
         />
       </label>
 
       <button
         type="submit"
         disabled={add.isPending}
-        className="rounded bg-(--color-brass) px-4 py-2 text-sm font-medium text-(--color-ground) disabled:opacity-60"
+        className="rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60"
       >
         {add.isPending ? 'Guardando e conferindo…' : 'Guardar chave'}
       </button>
 
       {result && <VerificationNote verification={result} />}
       {error && (
-        <p role="status" aria-live="polite" className="text-sm text-(--color-state-failed)">
+        <p role="status" aria-live="polite" className="text-sm text-(--color-falha-fg)">
           {error}
         </p>
       )}
@@ -205,27 +205,27 @@ function AddKey({ providers }: { providers: Provider[] }) {
  */
 function VerificationNote({ verification }: { verification: Verification }) {
   const notes: Record<Verification['status'], { text: string; tone: string }> = {
-    valid: { text: 'Chave conferida: o provedor aceitou.', tone: 'text-(--color-state-ready)' },
-    invalid: { text: 'O provedor recusou esta chave.', tone: 'text-(--color-state-failed)' },
+    valid: { text: 'Chave conferida: o provedor aceitou.', tone: 'text-(--color-pronto-fg)' },
+    invalid: { text: 'O provedor recusou esta chave.', tone: 'text-(--color-falha-fg)' },
     no_credit: {
       text: 'A chave funciona, mas a conta está sem crédito no provedor.',
-      tone: 'text-(--color-state-capped)',
+      tone: 'text-(--color-teto-fg)',
     },
     unverified_account: {
       text: 'A chave é válida, mas o provedor ainda não verificou a sua conta — não é erro de chave.',
-      tone: 'text-(--color-state-capped)',
+      tone: 'text-(--color-teto-fg)',
     },
     rate_limited: {
       text: 'O provedor está limitando a taxa agora. A chave foi guardada; dá para conferir depois.',
-      tone: 'text-(--color-state-queued)',
+      tone: 'text-(--color-espera-fg)',
     },
     unavailable: {
       text: 'O provedor não respondeu. A chave foi guardada e continua por conferir.',
-      tone: 'text-(--color-state-queued)',
+      tone: 'text-(--color-espera-fg)',
     },
     no_probe: {
       text: 'Guardada. Este provedor não expõe um jeito barato de conferir uma chave, então ela fica por conferir até a primeira geração — em vez de mostrarmos um certo que não significa nada.',
-      tone: 'text-(--color-state-queued)',
+      tone: 'text-(--color-espera-fg)',
     },
   }
 
@@ -256,20 +256,20 @@ function StoredKey({ credential, notice }: { credential: Credential; notice: str
 
   const status =
     credential.status === 'invalid'
-      ? { label: 'recusada pelo provedor', tone: 'text-(--color-state-failed)' }
+      ? { label: 'recusada pelo provedor', tone: 'text-(--color-falha-fg)' }
       : credential.verifiedAt
-        ? { label: 'conferida', tone: 'text-(--color-state-ready)' }
-        : { label: 'por conferir', tone: 'text-(--color-state-queued)' }
+        ? { label: 'conferida', tone: 'text-(--color-pronto-fg)' }
+        : { label: 'por conferir', tone: 'text-(--color-espera-fg)' }
 
   return (
-    <li className="flex flex-col gap-2 border-t border-(--color-line) pt-3 first:border-t-0 first:pt-0">
+    <li className="flex flex-col gap-2 border-t border-border pt-3 first:border-t-0 first:pt-0">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="text-sm">
             {credential.provider}
             {credential.label ? ` · ${credential.label}` : ''}
           </p>
-          <p className="font-mono text-xs text-(--color-ink-muted)">
+          <p className="font-mono text-xs text-muted-foreground">
             ····{credential.lastFour} · <span className={status.tone}>{status.label}</span>
           </p>
         </div>
@@ -278,14 +278,14 @@ function StoredKey({ credential, notice }: { credential: Credential; notice: str
           <button
             onClick={() => verify.mutate()}
             disabled={verify.isPending}
-            className="min-h-10 rounded-lg border border-(--color-edge) px-3 text-sm disabled:opacity-60"
+            className="min-h-10 rounded-lg border border-input px-3 text-sm disabled:opacity-60"
           >
             {verify.isPending ? 'Conferindo…' : 'Conferir'}
           </button>
           <button
             onClick={() => (confirming ? revoke.mutate() : setConfirming(true))}
             disabled={revoke.isPending}
-            className="min-h-10 rounded-lg border border-(--color-edge) px-3 text-sm text-(--color-state-failed) disabled:opacity-60"
+            className="min-h-10 rounded-lg border border-input px-3 text-sm text-(--color-falha-fg) disabled:opacity-60"
           >
             {confirming ? 'Confirmar remoção' : 'Remover'}
           </button>
@@ -293,13 +293,13 @@ function StoredKey({ credential, notice }: { credential: Credential; notice: str
       </div>
 
       {confirming && (
-        <p role="status" aria-live="polite" className="text-xs text-(--color-state-capped)">
+        <p role="status" aria-live="polite" className="text-xs text-(--color-teto-fg)">
           Isto remove a chave do Prumo e <strong>não</strong> a revoga no provedor. Se ela vazou,
           rotacione no painel do provedor — é o único conserto de verdade.
         </p>
       )}
 
-      {notice && <p className="text-xs text-(--color-ink-muted)">{notice}</p>}
+      {notice && <p className="text-xs text-muted-foreground">{notice}</p>}
 
       {verify.data && <VerificationNote verification={verify.data.verification} />}
     </li>
