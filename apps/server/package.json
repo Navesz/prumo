@@ -19,11 +19,11 @@
     "@orpc/openapi": "^1.15.0",
     "@orpc/server": "^1.15.0",
     "@prumo/contract": "*",
-    "fastify": "^5.12.1",
+    "fastify": "^5.12.3",
     "kysely": "^0.29.5",
     "pg": "^8.23.0",
     "pino": "^10.3.1",
-    "zod": "^4.4.3"
+    "zod": "^4.5.4"
   },
   "devDependencies": {
     "@types/pg": "^8.23.1"
