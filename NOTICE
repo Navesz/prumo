@@ -1,0 +1,13 @@
+prumo
+Copyright 2026 Leonardo Naves
+
+This product includes software developed by Leonardo Naves.
+
+Distributed under the Apache License, Version 2.0. The full license text is in
+the LICENSE file at the root of this repository.
+
+--------------------------------------------------------------------------------
+
+Portions of ferramental/ were vendored from the alicerce project
+(https://github.com/Navesz/alicerce), also under Apache-2.0.
+See adr/0002-vendor-alicerce-tooling.md for the record of that decision.
