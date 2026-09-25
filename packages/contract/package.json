@@ -20,7 +20,7 @@
     "clean": "rm -rf dist *.tsbuildinfo"
   },
   "dependencies": {
-    "@orpc/contract": "^1.15.0",
-    "zod": "^4.4.3"
+    "@orpc/contract": "^1.15.3",
+    "zod": "^4.6.5"
   }
 }
