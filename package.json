@@ -41,9 +41,9 @@
   },
   "devDependencies": {
     "@types/node": "^24.13.3",
-    "dependency-cruiser": "^18.2.0",
-    "oxlint": "^1.80.0",
-    "prettier": "^3.6.2",
+    "dependency-cruiser": "^18.4.0",
+    "oxlint": "^1.85.0",
+    "prettier": "^3.9.8",
     "typescript": "~6.0.3",
     "vitest": "^4.1.11"
   }
