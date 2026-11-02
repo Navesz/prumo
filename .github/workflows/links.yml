@@ -49,7 +49,7 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: DavidAnson/markdownlint-cli2-action@v24
+      - uses: DavidAnson/markdownlint-cli2-action@v25
         with:
           config: .github/.markdownlint-cli2.jsonc
           globs: '**/*.md'
